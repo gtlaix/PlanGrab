@@ -19,6 +19,8 @@ if __package__ in (None, ""):
 
 import uvicorn  # noqa: E402
 
+from plangrab.engine.config import Config  # noqa: E402
+from plangrab.engine.update import start_background_refresh  # noqa: E402
 from plangrab.web.app import app  # noqa: E402
 
 HOST = "127.0.0.1"
@@ -39,6 +41,8 @@ def main() -> None:
         webbrowser.open(url)
 
     threading.Thread(target=open_browser, daemon=True).start()
+    # Quietly pick up newly-added councils from the repo (best-effort, offline-safe).
+    start_background_refresh(Config.load())
     print(f"PlanGrab running at {url}")
     print("Leave this window open. Close it to stop PlanGrab.")
     uvicorn.run(app, host=HOST, port=port, log_level="warning")

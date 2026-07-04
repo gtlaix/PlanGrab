@@ -19,6 +19,7 @@ TESTS = [
     "test_build_map.py",
     "test_registry_data.py",
     "test_harvest_tools.py",
+    "test_update.py",
     "test_web.py",
 ]
 

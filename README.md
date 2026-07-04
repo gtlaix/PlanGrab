@@ -183,6 +183,24 @@ and *that* page is cleanly parseable.
 
 ---
 
+## Hosted coverage site & self-updating registry
+
+The **coverage page is hostable** (it's pure static data — no council requests,
+so no centralised-IP problem): `python tools/build_site.py` regenerates `docs/`
+— the coverage map, searchable council table, and a Windows-download button —
+which GitHub Pages serves directly (Settings → Pages → branch `master`,
+folder `/docs`). Downloads themselves always run from the user's own machine;
+that's deliberate (a hosted downloader would hammer council portals from one
+datacenter IP and get blocked).
+
+The local app completes the loop by **self-updating its council registry**: on
+startup it quietly fetches `lpa_registry.csv` / `compat_status.json` /
+`lpa_systems.csv` from the repo (`plangrab/engine/update.py`), so users gain
+newly-harvested councils without re-downloading the bundle. Strictly
+best-effort — offline or blocked networks keep the shipped data; responses are
+validated so an error page can never clobber real files. Opt out or repoint via
+`[registry_update]` in `config.toml`.
+
 ## Scaling across LPAs: registry, smoke test & dashboard
 
 ### Registry (`data/lpa_registry.csv`)

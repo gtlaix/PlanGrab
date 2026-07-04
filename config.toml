@@ -24,6 +24,13 @@ max_retries = 3       # retries on transient (429/5xx/network) errors
 # uncomment this as a last resort (it disables certificate checking entirely):
 # tls_verify = false
 
+# On startup, quietly fetch the latest council registry from the project repo so
+# new councils appear without re-downloading the app. Best-effort: offline or
+# blocked networks just keep the shipped data. Set enabled = false to opt out.
+[registry_update]
+enabled = true
+# url = "https://raw.githubusercontent.com/gtlaix/PlanGrab/master/data"
+
 # Per-system User-Agent overrides (system id -> UA). Optional. Some portals sit
 # behind a WAF that rejects non-browser UAs; their scraper already sets a sensible
 # browser-like default, but you can override it here without touching code. IDOX is
