@@ -68,11 +68,15 @@ def refresh_registry(config: Config, fetch: Optional[Callable[[str], Optional[st
         text = fetch(f"{base}/{name}")
         if text is None or not _valid(name, text):
             continue
+        # Compare and write BYTES: the CSVs contain CRLF line endings, which
+        # read_text() would normalise (breaking the comparison) and write_text()
+        # would mangle to CR-CRLF on Windows.
+        raw = text.encode("utf-8")
         target = data_dir / name
-        if target.exists() and target.read_text(encoding="utf-8") == text:
+        if target.exists() and target.read_bytes() == raw:
             continue
         tmp = target.with_suffix(target.suffix + ".tmp")
-        tmp.write_text(text, encoding="utf-8")
+        tmp.write_bytes(raw)
         tmp.replace(target)
         updated.append(name)
     if updated:

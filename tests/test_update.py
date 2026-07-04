@@ -73,6 +73,23 @@ def test_refresh_never_clobbers_on_bad_fetch():
             eq((d / name).read_text(encoding="utf-8"), "KEEP", f"{name} untouched")
 
 
+def test_crlf_idempotent():
+    # The real CSVs have CRLF line endings; a text-mode compare normalises them
+    # away and re-writes every run (and corrupts to CR-CRLF on Windows). The
+    # updater must be byte-exact: same content twice -> second run is a no-op.
+    crlf_reg = GOOD_REG.replace("\n", "\r\n")
+    payload = {"lpa_registry.csv": crlf_reg, "compat_status.json": GOOD_STATUS,
+               "lpa_systems.csv": GOOD_SYSTEMS}
+    fake_fetch = lambda url: payload[url.rsplit("/", 1)[1]]
+    with tempfile.TemporaryDirectory() as td:
+        d = Path(td)
+        first = refresh_registry(Config(), fetch=fake_fetch, data_dir=d)
+        eq(len(first), 3, "first run writes all files")
+        eq((d / "lpa_registry.csv").read_bytes(), crlf_reg.encode(), "CRLF preserved byte-exactly")
+        second = refresh_registry(Config(), fetch=fake_fetch, data_dir=d)
+        eq(second, [], "second run is a no-op (byte-exact comparison)")
+
+
 def test_opt_out():
     called = []
     updated = refresh_registry(Config(registry_update=False),
@@ -85,5 +102,6 @@ if __name__ == "__main__":
     test_validation_guards()
     test_refresh_updates_and_skips()
     test_refresh_never_clobbers_on_bad_fetch()
+    test_crlf_idempotent()
     test_opt_out()
     print(f"OK — {checks} registry-update checks passed.")
