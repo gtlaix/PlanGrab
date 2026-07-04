@@ -1,0 +1,54 @@
+# Regenerate the GitHub Pages coverage site whenever the council data (or the
+# dashboard assets it is built from) change on master. The workflow commits the
+# rebuilt docs/ back to the branch; Pages then redeploys automatically.
+#
+# No retrigger loop: the paths filter below deliberately excludes docs/**, and
+# the bot commit only touches docs/.
+name: Build coverage site
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - "data/**"
+      - "plangrab/web/static/**"
+      - "tools/build_site.py"
+  workflow_dispatch: {}
+
+concurrency:
+  group: build-site
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run the test suite
+        run: python tests/run_all.py
+
+      - name: Rebuild docs/
+        run: python tools/build_site.py
+
+      - name: Commit and push if the site changed
+        run: |
+          if git diff --quiet -- docs/; then
+            echo "Site unchanged — nothing to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/
+          git commit -m "Rebuild coverage site (automated)"
+          git push
