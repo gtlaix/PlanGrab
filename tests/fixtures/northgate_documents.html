@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html><head><title>Documents for reference RU.24/1388: Public Access</title></head><body>
+<!-- Minimal NEC/Northgate "Public Access" document-server page. The document
+     list is a server-rendered JSON model; the file is served by ViewDocument?id=.
+     Faithful to docs.runnymede.gov.uk/PublicAccess_LIVE. Used by test_northgate.py. -->
+<table id="documents"></table>
+<script>
+  var viewDocumentUrl = '/PublicAccess_Live/Document/ViewDocument';
+  var downLoadFile = '/PublicAccess_Live/Document/DownloadFile';
+  var model = {"Total":2,"Columns":[{"Column":"Date_Received","ColumnHeader":"Date Received","ColumnType":"D"},{"Column":"Doc_Ref2","ColumnHeader":"Doc Ref 2","ColumnType":"T"}],"Rows":[
+    {"Guid":"907B10393E1B4A45AB23E304501B57AD","Doc_Type":"Appeal - Other Documents","Date_Received":"06/09/2026 16:26:11","Doc_Ref2":"Appellant's Final Comments: Habitat Condition Assessments.xlsx"},
+    {"Guid":"AAAA1111BBBB2222CCCC3333DDDD4444","Doc_Type":"Application Form","Date_Received":"02/01/2025 09:00:00","Doc_Ref2":"Application Form (redacted).pdf"}
+  ]};
+</script>
+</body></html>

@@ -1,0 +1,75 @@
+"""Offline tests for the FastAPI layer using Starlette's TestClient — no council
+network is touched (only the local registry/boundaries/status files and the
+error path of /api/discover). Run:  python tests/test_web.py
+
+Note: /api/pick-folder and the live /api/discover|/api/download paths are NOT
+tested here — they open a native dialog / hit council sites.
+"""
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from fastapi.testclient import TestClient
+
+from plangrab.web.app import app
+
+client = TestClient(app)
+checks = 0
+
+
+def eq(got, want, label):
+    global checks
+    checks += 1
+    assert got == want, f"{label}:\n  got : {got!r}\n  want: {want!r}"
+
+
+def ok(cond, label):
+    global checks
+    checks += 1
+    assert cond, label
+
+
+def test_pages_render_with_injected_date():
+    for path in ("/", "/dashboard"):
+        r = client.get(path)
+        eq(r.status_code, 200, f"{path} renders")
+        ok("PlanGrab" in r.text, f"{path} shows PlanGrab brand")
+        ok("{{LAST_UPDATED}}" not in r.text, f"{path} date token substituted")
+        ok("Developed with Claude Code by George Lewis" in r.text, f"{path} byline present")
+
+
+def test_api_compat_shape():
+    data = client.get("/api/compat").json()
+    s = data["summary"]
+    ok("rows" in data and len(data["rows"]) > 0, "compat: has rows")
+    ok(s["total_lpas"] >= 300, "compat: total_lpas is all England (~308)")
+    ok(0 <= s["covered_pct"] <= 100, "compat: covered_pct in range")
+    ok(s["ok"] <= s["total_lpas"], "compat: ok <= total_lpas")
+
+
+def test_api_coverage_map_shape():
+    data = client.get("/api/coverage-map").json()
+    ok(data["viewBox"].startswith("0 0 "), "map: viewBox present")
+    feats = data["features"]
+    ok(len(feats) >= 300, "map: ~308 boundary features")
+    counts = data["counts"]
+    for cat in ("ok", "fail", "addable", "known", "unknown"):
+        ok(cat in counts, f"map: counts has '{cat}'")
+    eq(sum(counts.values()), len(feats), "map: category counts sum to feature count")
+    ok(all(set(f) >= {"name", "d", "category", "system"} for f in feats[:5]),
+       "map: features carry name/path/category/system")
+
+
+def test_api_discover_bad_url_is_400():
+    r = client.post("/api/discover", json={"url": "https://example.com/not-a-portal"})
+    eq(r.status_code, 400, "discover: unknown system -> 400")
+    ok("error" in r.json(), "discover: error message returned")
+
+
+if __name__ == "__main__":
+    test_pages_render_with_injected_date()
+    test_api_compat_shape()
+    test_api_coverage_map_shape()
+    test_api_discover_bad_url_is_400()
+    print(f"OK — {checks} web checks passed.")

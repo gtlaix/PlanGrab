@@ -1,0 +1,40 @@
+# Real Northgate / NEC Planning Explorer hosts (from the UKPlanning project),
+# not yet in the registry. Harvest + add them all with:
+#   python tools/harvest_northgate.py --apply
+# The harvester searches each host's Planning Explorer, follows an application's
+# documents link, classifies the document backend (NEC Public Access or Civica
+# W2 — both supported) and verifies it before proposing/adding a registry row.
+# Hosts whose docs sit on an unsupported backend are reported, not added.
+#
+# Probed 2026-07-01 from the dev sandbox (000 = DNS blocked here, may work
+# from a normal network — half the IDOX 000s did):
+#
+# 200 (live now):
+npe.conwy.gov.uk
+planning.southtyneside.info
+# planning.blackburn.gov.uk -> ADDED 2026-07-02 (docs at planningdms-live.blackburn.gov.uk,
+#   NEC Public Access, http-only; found via the application page's "Documents for
+#   Applications registered on or after 1st May 2018" link)
+# 403/503 (WAF or busy — retry from a normal network):
+planningrecords.camden.gov.uk
+eplanning.birmingham.gov.uk
+# 000 (unresolved from the sandbox):
+northgate.liverpool.gov.uk
+online.lincoln.gov.uk
+plan1.eppingforestdc.gov.uk
+planning.hackney.gov.uk
+planning.islington.gov.uk
+planning.merton.gov.uk
+planning.south-norfolk.gov.uk
+planning.trafford.gov.uk
+planning.walthamforest.gov.uk
+planning1.wandsworth.gov.uk
+portal.charnwood.gov.uk
+secure.broadland.gov.uk
+www.eaststaffsbc.gov.uk
+wwwapplications.barnsley.gov.uk
+# gone/reorganised (404, or the authority no longer exists):
+# planning.northyorkmoors.org.uk (404), planning.mendip.gov.uk (now Somerset),
+# www.eplan.forest-heath.gov.uk (now West Suffolk), planning.wiltshire.gov.uk
+# (moved to a Salesforce SPA), www2.swansea.gov.uk + pbsportal.southlanarkshire.gov.uk
+# (Wales/Scotland — out of the England map's scope)

@@ -1,0 +1,29 @@
+# Build output / portable bundle
+dist/
+
+# Dev virtualenv
+.venv/
+
+# Python caches
+__pycache__/
+*.pyc
+*.egg-info/
+
+# OS / editor noise
+.DS_Store
+.idea/
+.vscode/
+
+# Local tooling state (machine-specific paths; not part of the project)
+.claude/
+
+# Partial downloads / run artifacts
+*.part
+*.log
+manifest.csv
+
+# Seeding caches / logs (regenerated; not source of truth)
+data/_lpa_dataset.csv
+# Regenerable proposal outputs (not shipped; review then paste into lpa_registry.csv)
+data/registry_candidates.csv
+data/lpa_registry.seed.csv

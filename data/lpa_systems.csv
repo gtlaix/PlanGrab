@@ -1,0 +1,309 @@
+norm,lpa_name,system
+adur,Adur,unknown
+amber valley,Amber Valley,custom
+arun,Arun,ocella2
+ashfield,Ashfield,custom
+ashford,Ashford,custom
+babergh,Babergh,unknown
+barking and dagenham,Barking and Dagenham,unknown
+barnet,Barnet,idox
+barnsley,Barnsley,unknown
+basildon,Basildon,idox
+basingstoke and deane,Basingstoke and Deane,unknown
+bassetlaw,Bassetlaw,idox
+bath and north east somerset,Bath and North East Somerset,unknown
+bedford,Bedford,idox
+bexley,Bexley,idox
+birmingham,Birmingham,northgate
+blaby,Blaby,idox
+blackburn with darwen,Blackburn with Darwen,unknown
+blackpool,Blackpool,idox
+bolsover,Bolsover,idox
+bolton,Bolton,idox
+boston,Boston,custom
+bournemouth christchurch and poole,"Bournemouth, Christchurch and Poole",unknown
+bracknell forest,Bracknell Forest,unknown
+bradford,Bradford,idox
+braintree,Braintree,idox
+breckland,Breckland,ocella2
+brent,Brent,idox
+brentwood,Brentwood,idox
+brighton and hove,Brighton and Hove,unknown
+bristol,"Bristol, City of",idox
+broadland,Broadland,unknown
+bromley,Bromley,idox
+bromsgrove,Bromsgrove,unknown
+broxbourne,Broxbourne,civica
+broxtowe,Broxtowe,annuallist
+buckinghamshire,Buckinghamshire,idox
+burnley,Burnley,custom
+bury,Bury,idox
+calderdale,Calderdale,idox
+cambridge,Cambridge,idox
+camden,Camden,custom
+cannock chase,Cannock Chase,swiftlg
+canterbury,Canterbury,idox
+castle point,Castle Point,idox
+central bedfordshire,Central Bedfordshire,acolnet
+charnwood,Charnwood,unknown
+chelmsford,Chelmsford,idox
+cheltenham,Cheltenham,idox
+cherwell,Cherwell,idox
+cheshire east,Cheshire East,custom
+cheshire west and chester,Cheshire West and Chester,unknown
+chesterfield,Chesterfield,idox
+chichester,Chichester,idox
+chorley,Chorley,idox
+london,City of London,unknown
+colchester,Colchester,custom
+cornwall,Cornwall,idox
+cotswold,Cotswold,idox
+durham,County Durham,unknown
+coventry,Coventry,appsearchserv
+crawley,Crawley,custom
+croydon,Croydon,idox
+cumberland,Cumberland,unknown
+dacorum,Dacorum,idox
+darlington,Darlington,civica
+dartford,Dartford,idox
+dartmoor national park,Dartmoor National Park,unknown
+derby,Derby,idox
+derbyshire dales,Derbyshire Dales,idox
+doncaster,Doncaster,idox
+dorset,Dorset,atrium
+dover,Dover,idox
+dudley,Dudley,swiftlg
+ealing,Ealing,idox
+east cambridgeshire,East Cambridgeshire,idox
+east devon,East Devon,idox
+east hampshire,East Hampshire,idox
+east hertfordshire,East Hertfordshire,idox
+east lindsey,East Lindsey,idox
+east riding of yorkshire,East Riding of Yorkshire,unknown
+east staffordshire,East Staffordshire,unknown
+east suffolk,East Suffolk,idox
+eastbourne,Eastbourne,civica
+eastleigh,Eastleigh,unknown
+ebbsfleet development corporation,Ebbsfleet Development Corporation,unknown
+elmbridge,Elmbridge,custom
+enfield,Enfield,idox
+epping forest,Epping Forest,unknown
+epsom and ewell,Epsom and Ewell,unknown
+erewash,Erewash,civica
+exeter,Exeter,acolnet
+exmoor national park,Exmoor National Park,unknown
+fareham,Fareham,ocella2
+fenland,Fenland,idox
+folkestone and hythe,Folkestone and Hythe,unknown
+forest of dean,Forest of Dean,idox
+fylde,Fylde,idox
+gateshead,Gateshead,idox
+gedling,Gedling,idox
+gloucester,Gloucester,idox
+gosport,Gosport,idox
+gravesham,Gravesham,idox
+great yarmouth,Great Yarmouth,ocella2
+greenwich,Greenwich,idox
+guildford,Guildford,idox
+hackney,Hackney,unknown
+halton,Halton,custom
+hammersmith and fulham,Hammersmith and Fulham,unknown
+harborough,Harborough,idox
+haringey,Haringey,appsearchserv
+harlow,Harlow,idox
+harrow,Harrow,civica
+hart,Hart,idox
+hartlepool,Hartlepool,appsearchserv
+hastings,Hastings,idox
+havant,Havant,idox
+havering,Havering,ocella2
+herefordshire of,"Herefordshire, County of",unknown
+hertsmere,Hertsmere,idox
+high peak,High Peak,appsearchserv
+hillingdon,Hillingdon,ocella2
+hinckley and bosworth,Hinckley and Bosworth,unknown
+horsham,Horsham,idox
+hounslow,Hounslow,thames
+huntingdonshire,Huntingdonshire,idox
+hyndburn,Hyndburn,wam
+ipswich,Ipswich,custom
+isle of wight,Isle of Wight,custom
+isles of scilly,Isles of Scilly,unknown
+islington,Islington,unknown
+kensington and chelsea,Kensington and Chelsea,unknown
+kingston upon hull,"Kingston upon Hull, City of",unknown
+kingston upon thames,Kingston upon Thames,unknown
+king s lynn and west norfolk,King’s Lynn and West Norfolk,unknown
+kirklees,Kirklees,custom
+knowsley,Knowsley,idox
+lake national park,Lake District National Park,unknown
+lambeth,Lambeth,idox
+lancaster,Lancaster,idox
+leeds,Leeds,idox
+leicester,Leicester,custom
+lewes,Lewes,idox
+lewisham,Lewisham,idox
+lichfield,Lichfield,idox
+lincoln,Lincoln,idox
+liverpool,Liverpool,unknown
+luton,Luton,idox
+maidstone,Maidstone,unknown
+maldon,Maldon,idox
+malvern hills,Malvern Hills,telerik
+manchester,Manchester,idox
+mansfield,Mansfield,idox
+medway,Medway,idox
+melton,Melton,idox
+merton,Merton,unknown
+mid devon,Mid Devon,idox
+mid suffolk,Mid Suffolk,unknown
+mid sussex,Mid Sussex,idox
+middlesbrough,Middlesbrough,idox
+milton keynes,Milton Keynes,idox
+mole valley,Mole Valley,swiftlg
+new forest,New Forest,idox
+new forest national park,New Forest National Park,unknown
+newark and sherwood,Newark and Sherwood,unknown
+newcastle upon tyne,Newcastle upon Tyne,idox
+newcastle under lyme,Newcastle-under-Lyme,idox
+newham,Newham,idox
+north devon,North Devon,fastweb
+north east derbyshire,North East Derbyshire,idox
+north east lincolnshire,North East Lincolnshire,unknown
+north hertfordshire,North Hertfordshire,idox
+north kesteven,North Kesteven,idox
+north lincolnshire,North Lincolnshire,unknown
+north norfolk,North Norfolk,idox
+north northamptonshire,North Northamptonshire,unknown
+north somerset,North Somerset,annuallist
+north tyneside,North Tyneside,idox
+north warwickshire,North Warwickshire,appsearchserv
+north west leicestershire,North West Leicestershire,idox
+north york moors national park,North York Moors National Park,unknown
+north yorkshire,North Yorkshire,custom
+northumberland,Northumberland,idox
+northumberland national park,Northumberland National Park,unknown
+norwich,Norwich,idox
+nottingham,Nottingham,idox
+nuneaton and bedworth,Nuneaton and Bedworth,unknown
+oadby and wigston,Oadby and Wigston,unknown
+old oak and park development corporation,Old Oak and Park Royal Development Corporation,unknown
+oldham,Oldham,idox
+oxford,Oxford,idox
+peak national park,Peak District National Park,unknown
+pendle,Pendle,idox
+peterborough,Peterborough,idox
+plymouth,Plymouth,idox
+portsmouth,Portsmouth,idox
+preston,Preston,swiftlg
+reading,Reading,fastweb
+redbridge,Redbridge,swiftlg
+redcar and cleveland,Redcar and Cleveland,unknown
+redditch,Redditch,unknown
+reigate and banstead,Reigate and Banstead,unknown
+ribble valley,Ribble Valley,custom
+richmond upon thames,Richmond upon Thames,unknown
+rochdale,Rochdale,idox
+rochford,Rochford,astun
+rossendale,Rossendale,idox
+rother,Rother,ocella2
+rotherham,Rotherham,fastweb
+rugby,Rugby,fastweb
+runnymede,Runnymede,northgate
+rushcliffe,Rushcliffe,idox
+rushmoor,Rushmoor,idox
+rutland,Rutland,swiftlg
+salford,Salford,idox
+sandwell,Sandwell,idox
+sefton,Sefton,idox
+sevenoaks,Sevenoaks,idox
+sheffield,Sheffield,idox
+shropshire,Shropshire,idox
+slough,Slough,swiftlg
+solihull,Solihull,idox
+somerset,Somerset,atrium
+south cambridgeshire,South Cambridgeshire,swiftlg
+south derbyshire,South Derbyshire,custom
+south downs national park,South Downs National Park,unknown
+south gloucestershire,South Gloucestershire,idox
+south hams,South Hams,unknown
+south holland,South Holland,ocella2
+south kesteven,South Kesteven,custom
+south norfolk,South Norfolk,idox
+south oxfordshire,South Oxfordshire,oxon
+south ribble,South Ribble,idox
+south staffordshire,South Staffordshire,idox
+south tyneside,South Tyneside,custom
+southampton,Southampton,idox
+southend on sea,Southend-on-Sea,unknown
+southwark,Southwark,idox
+spelthorne,Spelthorne,astun
+st albans,St Albans,civica
+st helens,St. Helens,idox
+stafford,Stafford,idox
+staffordshire moorlands,Staffordshire Moorlands,appsearchserv
+stevenage,Stevenage,idox
+stockport,Stockport,idox
+stockton on tees,Stockton-on-Tees,unknown
+stoke on trent,Stoke-on-Trent,unknown
+stratford on avon,Stratford-on-Avon,custom
+stroud,Stroud,annuallist
+sunderland,Sunderland,idox
+surrey heath,Surrey Heath,custom
+sutton,Sutton,fastweb
+swale,Swale,unknown
+swindon,Swindon,idox
+tameside,Tameside,custom
+tamworth,Tamworth,northgate
+tandridge,Tandridge,custom
+teignbridge,Teignbridge,custom
+telford and wrekin,Telford and Wrekin,unknown
+tendring,Tendring,idox
+test valley,Test Valley,idox
+tewkesbury,Tewkesbury,idox
+thanet,Thanet,idox
+broads,The Broads Authority,idox
+three rivers,Three Rivers,idox
+thurrock,Thurrock,idox
+tonbridge and malling,Tonbridge and Malling,unknown
+torbay,Torbay,idox
+torridge,Torridge,idox
+tower hamlets,Tower Hamlets,idox
+trafford,Trafford,idox
+tunbridge wells,Tunbridge Wells,idox
+uttlesford,Uttlesford,idox
+vale of white horse,Vale of White Horse,unknown
+wakefield,Wakefield,idox
+walsall,Walsall,swiftlg
+waltham forest,Waltham Forest,civica
+wandsworth,Wandsworth,unknown
+warrington,Warrington,swiftlg
+warwick,Warwick,idox
+watford,Watford,idox
+waverley,Waverley,annuallist
+wealden,Wealden,custom
+welwyn hatfield,Welwyn Hatfield,custom
+west berkshire,West Berkshire,idox
+west devon,West Devon,unknown
+west lancashire,West Lancashire,idox
+west lindsey,West Lindsey,custom
+west northamptonshire,West Northamptonshire,unknown
+west oxfordshire,West Oxfordshire,idox
+west suffolk,West Suffolk,idox
+westminster,Westminster,idox
+westmorland and furness,Westmorland and Furness,unknown
+wigan,Wigan,custom
+wiltshire,Wiltshire,custom
+winchester,Winchester,idox
+windsor and maidenhead,Windsor and Maidenhead,unknown
+wirral,Wirral,idox
+woking,Woking,idox
+wokingham,Wokingham,custom
+wolverhampton,Wolverhampton,idox
+worcester,Worcester,ocella2
+worthing,Worthing,unknown
+wychavon,Wychavon,telerik
+wyre,Wyre,idox
+wyre forest,Wyre Forest,fastweb
+york,York,idox
+yorkshire dales national park,Yorkshire Dales National Park,unknown

@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PlanGrab</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <!--
+    Functional placeholder UI. The polished visual design produced in Claude
+    Design drops in here, targeting the JSON contract documented in web/app.py.
+    Keep the element ids / event flow, restyle freely.
+  -->
+  <main>
+    <header>
+      <div class="brandbar">
+        <h1>PlanGrab</h1>
+        <div class="page-toggle on-left">
+          <span class="slider"></span>
+          <a class="active" href="/">Downloader</a>
+          <a href="/dashboard">LPA Coverage</a>
+        </div>
+      </div>
+      <p class="byline">Developed with Claude Code by George Lewis. Last updated: {{LAST_UPDATED}}.</p>
+      <p class="tagline">Many LPA planning portals do not provide a 'download all' button. This is that button.</p>
+    </header>
+
+    <section class="card">
+      <label for="url">Documents Page URL</label>
+      <div class="row">
+        <input id="url" type="url" placeholder="e.g. https://pa.bristol.gov.uk/online-applications/applicationDetails.do?activeTab=documents&amp;keyVal=..." autocomplete="off">
+        <button id="discover">Discover</button>
+      </div>
+      <p id="discover-status" class="status"></p>
+    </section>
+
+    <section id="results" class="card hidden">
+      <div class="results-head">
+        <div>
+          <strong id="lpa"></strong>
+          <span id="system" class="muted"></span>
+        </div>
+        <span id="count" class="pill"></span>
+      </div>
+      <p id="order-note" class="muted hidden">Documents are listed newest to oldest.</p>
+      <ol id="doc-list"></ol>
+
+      <div class="folder">
+        <label for="folder">Save to folder</label>
+        <div class="row">
+          <input id="folder" type="text" placeholder="Choose or paste a folder path…">
+          <button id="browse" class="secondary">Browse…</button>
+        </div>
+        <p id="folder-note" class="status"></p>
+      </div>
+
+      <button id="download" disabled>Download all</button>
+      <div id="progress" class="progress hidden"><div id="progress-bar"></div></div>
+      <p id="download-status" class="status"></p>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

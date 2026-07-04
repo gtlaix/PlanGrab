@@ -1,0 +1,39 @@
+# PlanGrab configuration.
+# Everything here has a sensible default in code; this file just lets you tweak
+# behaviour without touching Python.
+
+[naming]
+# Filename template. Split on " - "; a segment is dropped whole if any field it
+# references is empty (so missing metadata never leaves a dangling " -  - ").
+# index/total are zero-padded to the width of total automatically.
+# The real file extension is appended automatically — do NOT put .{ext} here.
+# Available fields: {index} {total} {title} {plan_number} {date} {doc_type} {doc_id}
+template = "{index:03d} of {total:03d} - {title} - {plan_number} - {date}"
+# strftime format for {date}. Default renders "01 Jan 2025".
+date_format = "%d %b %Y"
+
+[network]
+# Be honest and polite. Set a contactable UA if you run this at any scale.
+user_agent = "PlanGrab/0.1 (+UK planning document downloader)"
+request_delay = 0.7   # seconds between requests
+timeout = 60.0        # per-request timeout, seconds
+max_retries = 3       # retries on transient (429/5xx/network) errors
+# TLS certificates are checked against the OPERATING SYSTEM's certificate store
+# (so corporate-proxy CAs installed by IT are trusted automatically). If you
+# still get a CERTIFICATE_VERIFY_FAILED / "_ssl.c:…" error on a work network,
+# uncomment this as a last resort (it disables certificate checking entirely):
+# tls_verify = false
+
+# Per-system User-Agent overrides (system id -> UA). Optional. Some portals sit
+# behind a WAF that rejects non-browser UAs; their scraper already sets a sensible
+# browser-like default, but you can override it here without touching code. IDOX is
+# left to the honest default above.
+[user_agents]
+# northgate = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ... Chrome/124.0 Safari/537.36"
+
+# Friendly council names by host. Optional — an unknown host on a known system
+# still works (it falls back to a humanised hostname). Add a line to label one.
+[lpa_registry]
+"pa.bristol.gov.uk" = "Bristol City Council"
+"developments.southglos.gov.uk" = "South Gloucestershire Council"
+"planning.n-somerset.gov.uk" = "North Somerset Council"

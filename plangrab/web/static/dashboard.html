@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>PlanGrab — LPA Coverage</title>
+  <link rel="stylesheet" href="/static/styles.css">
+  <link rel="stylesheet" href="/static/dashboard.css">
+</head>
+<body>
+  <main class="wide">
+    <header>
+      <div class="brandbar">
+        <h1>PlanGrab</h1>
+        <div class="page-toggle on-right">
+          <span class="slider"></span>
+          <a href="/">Downloader</a>
+          <a class="active" href="/dashboard">LPA Coverage</a>
+        </div>
+      </div>
+      <p class="byline">Developed with Claude Code by George Lewis. Last updated: {{LAST_UPDATED}}.</p>
+      <h2 class="page-title">LPA Coverage</h2>
+      <p class="tagline">LPAs currently compatible with PlanGrab.</p>
+    </header>
+
+    <section id="coverage" class="card cov"></section>
+
+    <section class="card map-card">
+      <div class="map-head">
+        <h2>Coverage map</h2>
+        <div class="map-legend">
+          <span><i class="sw ok"></i> works</span>
+          <span><i class="sw fail"></i> not working</span>
+          <span><i class="sw addable"></i> supported system &mdash; ready to add</span>
+          <span><i class="sw known"></i> other system, not yet supported</span>
+          <span><i class="sw unknown"></i> system unknown</span>
+        </div>
+      </div>
+      <p id="map-systems" class="map-systems"></p>
+      <div class="map-wrap">
+        <svg id="map" preserveAspectRatio="xMidYMid meet" aria-label="LPA coverage map"></svg>
+        <div id="map-tip" class="map-tip hidden"></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="controls">
+        <input id="search" type="search" placeholder="Search council name…" autocomplete="off">
+        <select id="filter-system"><option value="">All systems</option></select>
+        <select id="filter-status"><option value="">All statuses</option></select>
+        <span class="spacer"></span>
+        <button id="recheck" class="secondary" title="Re-run discover() checks in the background">Re-run checks</button>
+      </div>
+      <p id="recheck-status" class="status"></p>
+      <table id="grid">
+        <thead>
+          <tr>
+            <th data-sort="lpa_name">LPA</th>
+            <th data-sort="system">System</th>
+            <th data-sort="status">Status</th>
+            <th data-sort="doc_count" class="num">Docs found in example</th>
+            <th data-sort="last_checked">Last checked</th>
+            <th>Example</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+      <p id="empty" class="muted hidden">No rows match.</p>
+    </section>
+  </main>
+  <script src="/static/dashboard.js"></script>
+</body>
+</html>

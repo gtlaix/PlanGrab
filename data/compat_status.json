@@ -1,0 +1,716 @@
+{
+  "Aylesbury Vale (now Buckinghamshire)": {
+    "doc_count": 6,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "Buckinghamshire County (legacy portal)": {
+    "doc_count": 26,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "Craven (now North Yorkshire)": {
+    "doc_count": 7,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000004": {
+    "doc_count": 8,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000008": {
+    "doc_count": 6,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000012": {
+    "doc_count": 46,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000014": {
+    "doc_count": 3,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000018": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000023": {
+    "doc_count": 18,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000024": {
+    "doc_count": 38,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000025": {
+    "doc_count": 7,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000026": {
+    "doc_count": 8,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000032": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000034": {
+    "doc_count": 22,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000037": {
+    "doc_count": 6,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000040": {
+    "doc_count": 10,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000045": {
+    "doc_count": 13,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000047": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000050": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000051": {
+    "doc_count": 11,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000052": {
+    "doc_count": 6,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000057": {
+    "doc_count": 9,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E06000060": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000009": {
+    "doc_count": 7,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000033": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000034": {
+    "doc_count": 10,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000038": {
+    "doc_count": 10,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000040": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000042": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000045": {
+    "doc_count": 7,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000046": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000066": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000068": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000073": {
+    "doc_count": 19,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000076": {
+    "doc_count": 9,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000077": {
+    "doc_count": 79,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000078": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000079": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000080": {
+    "doc_count": 18,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000081": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000082": {
+    "doc_count": 11,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000083": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000084": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000088": {
+    "doc_count": 19,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000089": {
+    "doc_count": 7,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000092": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000093": {
+    "doc_count": 9,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000094": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000098": {
+    "doc_count": 8,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000102": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000106": {
+    "doc_count": 6,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000107": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000108": {
+    "doc_count": 6,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000110": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000111": {
+    "doc_count": 14,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000114": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000116": {
+    "doc_count": 6,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000118": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000121": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000122": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000125": {
+    "doc_count": 14,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000126": {
+    "doc_count": 8,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000127": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000128": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000129": {
+    "doc_count": 20,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000131": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000133": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000135": {
+    "doc_count": 3,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000137": {
+    "doc_count": 3,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000138": {
+    "doc_count": 3,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000139": {
+    "doc_count": 88,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000146": {
+    "doc_count": 16,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000147": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000148": {
+    "doc_count": 3,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000171": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000173": {
+    "doc_count": 6,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000174": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000176": {
+    "doc_count": 10,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000178": {
+    "doc_count": 3,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000181": {
+    "doc_count": 108,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000194": {
+    "doc_count": 19,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000196": {
+    "doc_count": 8,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000199": {
+    "doc_count": 3,
+    "last_checked": "2026-07-01",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000200": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000208": {
+    "doc_count": 19,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000212": {
+    "doc_count": 223,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000225": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000234": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000236": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000242": {
+    "doc_count": 74,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000243": {
+    "doc_count": 7,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000244": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E07000245": {
+    "doc_count": 10,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E08000004": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E08000009": {
+    "doc_count": 1,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E08000013": {
+    "doc_count": 44,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E08000019": {
+    "doc_count": 6,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E08000022": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E08000029": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E08000031": {
+    "doc_count": 3,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E08000032": {
+    "doc_count": 8,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E08000033": {
+    "doc_count": 3,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E08000035": {
+    "doc_count": 9,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E08000036": {
+    "doc_count": 17,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E09000001": {
+    "doc_count": 5,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E09000003": {
+    "doc_count": 3,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E09000004": {
+    "doc_count": 1,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E09000009": {
+    "doc_count": 1,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E09000010": {
+    "doc_count": 8,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E09000013": {
+    "doc_count": 7,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E09000022": {
+    "doc_count": 3,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E09000025": {
+    "doc_count": 3,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E09000028": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "E09000033": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "East Lothian": {
+    "doc_count": 9,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "Scarborough (now North Yorkshire)": {
+    "doc_count": 4,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "South Downs National Park": {
+    "doc_count": 82,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "Swansea (Wales)": {
+    "doc_count": 7,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  },
+  "Torfaen (Wales)": {
+    "doc_count": 2,
+    "last_checked": "2026-07-02",
+    "message": "",
+    "status": "ok"
+  }
+}
