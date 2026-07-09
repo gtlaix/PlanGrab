@@ -15,6 +15,16 @@ if TYPE_CHECKING:
     from .models import DocMeta
 
 
+class ReferenceLookupError(Exception):
+    """Could not resolve a human application reference to a documents URL.
+
+    Raised when a portal's search returns no unambiguous match for the given
+    reference (no results, or several results none of whose own ``Ref. No``
+    field equals it). We deliberately fail rather than guess — a
+    confidently-wrong URL is worse than an honest "not found".
+    """
+
+
 class Scraper(ABC):
     """Abstract base for portal scrapers.
 
@@ -51,3 +61,18 @@ class Scraper(ABC):
     def resolve_download(self, client: httpx.Client, doc: "DocMeta") -> str:
         """Return the final URL to stream the file from. Override if indirect."""
         return doc.source_url
+
+    def resolve_reference(self, client: httpx.Client, reference: str) -> str:
+        """Return the documents-page URL for a human application reference.
+
+        Lets a user who only has the reference number (e.g. ``23/02163/COND``)
+        reach the documents page without first finding the URL by hand. Only
+        systems whose portal exposes a searchable reference implement this;
+        the default reports that the system doesn't support it yet.
+
+        Raises :class:`ReferenceLookupError` when the reference can't be
+        resolved unambiguously (never guesses).
+        """
+        raise ReferenceLookupError(
+            f"Searching by reference isn't supported for {self.system_name} yet."
+        )

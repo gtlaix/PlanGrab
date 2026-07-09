@@ -4,6 +4,7 @@ Public surface used by the CLI and the web layer:
 
     from plangrab.engine import Config, get_scraper, download_all, make_client
 """
+from .base import ReferenceLookupError
 from .config import Config
 from .download import download_all, make_client, user_agent_for
 from .models import DocMeta, FetchResult
@@ -21,6 +22,7 @@ __all__ = [
     "DocMeta",
     "FetchResult",
     "LpaRecord",
+    "ReferenceLookupError",
     "Registry",
     "UnknownSystemError",
     "UnsupportedSystemError",

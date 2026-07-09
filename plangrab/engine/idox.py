@@ -28,11 +28,14 @@ from urllib.parse import parse_qs, urljoin, urlparse, urlencode, urlunparse
 import httpx
 from bs4 import BeautifulSoup
 
-from .base import Scraper
+from .base import ReferenceLookupError, Scraper
 from .models import DocMeta
 
 # IDOX dates render as "29 Oct 2025".
 _DATE_FMT = "%d %b %Y"
+
+# keyVal query param on an applicationDetails.do link.
+_KEYVAL_RE = re.compile(r"keyVal=([A-Za-z0-9]+)")
 
 
 class IdoxScraper(Scraper):
@@ -90,6 +93,61 @@ class IdoxScraper(Scraper):
             doc.total = total
         return docs
 
+    def resolve_reference(self, client: httpx.Client, reference: str) -> str:
+        """Resolve a human application reference to its documents-page URL.
+
+        IDOX's ``keyVal`` is opaque for modern applications, so the reference
+        can't be turned into a URL directly — it has to be looked up by
+        running the portal's own **simple search** (a form POST; a GET to
+        ``simpleSearchResults.do`` just returns the empty form). The results
+        are server-rendered, so plain httpx + an HTML parse is enough — the
+        same mechanism ``tools/harvest_examples.py`` already uses to harvest
+        example URLs; no headless browser needed.
+
+        A search can return several applications, each with its own keyVal —
+        e.g. searching a permission reference also surfaces a later COND whose
+        *description* quotes it. So we match each result row's own ``Ref. No``
+        field, never the first row or free row text, and raise rather than
+        guess if nothing matches (:class:`ReferenceLookupError`).
+        """
+        reference = reference.strip()
+        if not reference:
+            raise ReferenceLookupError("No application reference supplied.")
+
+        oa = f"{self.base_url}/online-applications"
+        search_page = f"{oa}/search.do?action=simple&searchType=Application"
+        # _fetch clears any /Disclaimer gate and leaves the session cookie on
+        # the client, so the POST below carries it through.
+        resp = self._fetch(client, search_page)
+        hidden = self._hidden_inputs(resp.text)
+        results = client.post(
+            f"{oa}/simpleSearchResults.do?action=firstPage",
+            data={**hidden,
+                  "searchCriteria.simpleSearchString": reference,
+                  "searchType": "Application",
+                  "searchCriteria.simpleSearch": "true"},
+            headers={"Referer": search_page},
+        )
+        results.raise_for_status()
+
+        keyval = self._keyval_for_reference(results, reference)
+        if not keyval:
+            raise ReferenceLookupError(
+                f"No application matching reference {reference!r} was found on "
+                f"{self.lpa_name}'s portal. Check the reference (including its "
+                f"suffix, e.g. /F or /COND) and that it belongs to this council."
+            )
+
+        url = self._normalise_url(f"{oa}/applicationDetails.do?keyVal={keyval}")
+        # Re-verify: a wrong keyVal then surfaces as an error, not a bad link.
+        verify = self._fetch(client, url)
+        if not self._echoes(verify.text, reference):
+            raise ReferenceLookupError(
+                f"Resolved a page for reference {reference!r}, but it didn't "
+                f"match the reference — the portal layout may have changed."
+            )
+        return url
+
     # -- helpers ----------------------------------------------------------
 
     @staticmethod
@@ -123,6 +181,68 @@ class IdoxScraper(Scraper):
         qs["activeTab"] = ["documents"]
         new_query = urlencode({k: v[0] for k, v in qs.items()})
         return urlunparse(parts._replace(query=new_query))
+
+    @staticmethod
+    def _hidden_inputs(html: str) -> dict:
+        """Name->value for every hidden field on the search form.
+
+        IDOX seeds the simple-search POST with hidden inputs (CSRF-ish tokens,
+        default criteria); replaying them keeps the search working across
+        councils that vary the set.
+        """
+        soup = BeautifulSoup(html, "html.parser")
+        out: dict[str, str] = {}
+        for inp in soup.find_all("input", attrs={"type": "hidden"}):
+            name = inp.get("name")
+            if name:
+                out[name] = inp.get("value", "")
+        return out
+
+    @classmethod
+    def _keyval_for_reference(cls, response, reference: str) -> str | None:
+        """Pick the keyVal for ``reference`` from a search-results response.
+
+        Two shapes: a single exact match redirects straight to the detail page
+        (take its lone keyVal, once we've confirmed the page echoes the
+        reference); otherwise iterate the result rows and take the keyVal only
+        from the row whose own ``Ref. No`` field equals the reference. Returns
+        ``None`` (never a guess) if nothing matches.
+        """
+        soup = BeautifulSoup(response.text, "html.parser")
+        rows = soup.select("li.searchresult") or soup.select(".searchresult")
+
+        if not rows:
+            # Single-match redirect: we're already on the detail page. Only
+            # trust it if the page genuinely echoes the reference.
+            if cls._echoes(soup.get_text(" ", strip=True), reference):
+                link = soup.find("a", href=_KEYVAL_RE)
+                if link:
+                    m = _KEYVAL_RE.search(link.get("href", ""))
+                    if m:
+                        return m.group(1)
+            return None
+
+        # Match the row's OWN "Ref. No:" field — not free row text, which can
+        # quote another application's reference (the COND-quoting-parent trap).
+        # The trailing (?![\w/]) stops a reference matching a longer one it is
+        # a prefix of.
+        ref_field = re.compile(
+            r"Ref(?:erence)?\.?\s*No\.?\s*:?\s*" + re.escape(reference) + r"(?![\w/])",
+            re.IGNORECASE,
+        )
+        for row in rows:
+            if ref_field.search(row.get_text(" ", strip=True)):
+                link = row.find("a", href=_KEYVAL_RE)
+                if link:
+                    m = _KEYVAL_RE.search(link.get("href", ""))
+                    if m:
+                        return m.group(1)
+        return None
+
+    @staticmethod
+    def _echoes(text: str, reference: str) -> bool:
+        """True if the page text carries the reference (with or without slashes)."""
+        return reference in text or reference.replace("/", "") in text
 
     @staticmethod
     def _column_map(table) -> dict:
