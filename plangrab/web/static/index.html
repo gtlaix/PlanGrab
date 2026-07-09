@@ -27,7 +27,18 @@
     </header>
 
     <section class="card">
-      <label for="url">Documents Page URL</label>
+      <label for="ref-council">Find by application reference</label>
+      <div class="row ref-row">
+        <input id="ref-council" list="council-list" placeholder="Council (type to search)…" autocomplete="off" spellcheck="false">
+        <input id="ref-number" type="text" placeholder="Reference, e.g. 23/02163/COND" autocomplete="off" spellcheck="false">
+        <button id="find-ref">Find</button>
+      </div>
+      <datalist id="council-list"></datalist>
+      <p id="find-status" class="status"></p>
+    </section>
+
+    <section class="card">
+      <label for="url">…or paste the Documents Page URL</label>
       <div class="row">
         <input id="url" type="url" placeholder="e.g. https://pa.bristol.gov.uk/online-applications/applicationDetails.do?activeTab=documents&amp;keyVal=..." autocomplete="off">
         <button id="discover">Discover</button>

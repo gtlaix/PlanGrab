@@ -14,6 +14,19 @@ POST /api/discover
                              "plan_number": str|null, "source_url": str}, ... ]}
   400     : {"error": "<message>"}              # unknown system / bad URL / no table
 
+GET /api/councils
+  200     : {"councils": [ {"name": str, "base_url": str, "system": str,
+                            "supports_reference": bool}, ... ]}  # sorted by name
+            # Feeds the "search by reference" council picker. supports_reference
+            # is true where the system can look an application up by reference.
+
+POST /api/resolve
+  request : {"council": "<portal-base-url>", "reference": "<application ref>"}
+  200     : {"url": "<documents-page-url>", "lpa": str, "reference": str}
+  400     : {"error": "<message>"}    # unknown council / not found / unsupported
+            # Resolves a reference to its documents URL; the UI then feeds that
+            # URL into /api/discover (contract above), so nothing downstream changes.
+
 POST /api/download   (streaming response, media type application/x-ndjson)
   request : {"url": str, "folder": str}
   stream  : one JSON object per line, in order:
@@ -51,9 +64,11 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from plangrab.engine import (
-    Config, Registry, UnknownSystemError, download_all, get_scraper, make_client,
-    user_agent_for,
+    Config, ReferenceLookupError, Registry, UnknownSystemError, download_all,
+    get_scraper, make_client, user_agent_for,
 )
+from plangrab.engine.base import Scraper
+from plangrab.engine.registry import SYSTEMS
 from plangrab.engine.compat import (
     ALL_STATUSES, OK, UNCHECKED, days_since, load_status, merge_for_dashboard,
     normalise_name, save_status,
@@ -73,6 +88,11 @@ class DiscoverRequest(BaseModel):
 class DownloadRequest(BaseModel):
     url: str
     folder: str
+
+
+class ResolveRequest(BaseModel):
+    council: str      # the portal base URL (from /api/councils)
+    reference: str
 
 
 def _doc_json(d) -> dict:
@@ -108,6 +128,54 @@ def discover(req: DiscoverRequest):
         "count": len(docs),
         "documents": [_doc_json(d) for d in docs],
     }
+
+
+def _supports_reference(system: str) -> bool:
+    """True if this system's scraper can look an application up by reference."""
+    cls = SYSTEMS.get(system)
+    return cls is not None and cls.resolve_reference is not Scraper.resolve_reference
+
+
+@app.get("/api/councils")
+def councils():
+    """List registered councils for the reference-search picker (sorted by name)."""
+    registry = Registry.load()
+    out = []
+    for rec in registry.records:
+        if not rec.portal_base_url:
+            continue
+        out.append({
+            "name": rec.lpa_name,
+            "base_url": rec.portal_base_url,
+            "system": rec.system,
+            "supports_reference": _supports_reference(rec.system),
+        })
+    out.sort(key=lambda c: c["name"].lower())
+    return {"councils": out}
+
+
+@app.post("/api/resolve")
+def resolve(req: ResolveRequest):
+    """Resolve a reference to its documents-page URL (see the contract above)."""
+    reference = (req.reference or "").strip()
+    if not reference:
+        return JSONResponse({"error": "Enter an application reference."}, status_code=400)
+    try:
+        scraper = get_scraper(req.council, _config.lpa_registry)
+    except UnknownSystemError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+
+    client = make_client(_config, user_agent_for(scraper, _config))
+    try:
+        url = scraper.resolve_reference(client, reference)
+    except ReferenceLookupError as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    except Exception as exc:
+        return JSONResponse({"error": str(exc)}, status_code=400)
+    finally:
+        client.close()
+
+    return {"url": url, "lpa": scraper.lpa_name, "reference": reference}
 
 
 @app.post("/api/download")

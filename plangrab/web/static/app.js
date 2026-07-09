@@ -35,6 +35,65 @@ async function discover() {
   }
 }
 
+// Council name -> portal base URL, for the reference-search picker.
+const councilBaseUrl = new Map();
+
+async function loadCouncils() {
+  try {
+    const resp = await fetch("/api/councils");
+    const data = await resp.json();
+    const list = $("council-list");
+    list.innerHTML = "";
+    for (const c of data.councils) {
+      if (!c.supports_reference) continue; // only councils we can search by ref
+      councilBaseUrl.set(c.name, c.base_url);
+      const opt = document.createElement("option");
+      opt.value = c.name;
+      list.appendChild(opt);
+    }
+  } catch (e) {
+    // Non-fatal: the URL box still works without the picker.
+    setStatus($("find-status"), "Couldn't load the council list — paste a URL instead.");
+  }
+}
+
+async function findByReference() {
+  const councilName = $("ref-council").value.trim();
+  const reference = $("ref-number").value.trim();
+  if (!reference) {
+    setStatus($("find-status"), "Enter an application reference.", true);
+    return;
+  }
+  const base = councilBaseUrl.get(councilName);
+  if (!base) {
+    setStatus($("find-status"), "Pick a council from the list first.", true);
+    return;
+  }
+  $("find-ref").disabled = true;
+  setStatus($("find-status"), "Searching the portal…");
+  try {
+    const resp = await fetch("/api/resolve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ council: base, reference }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) {
+      setStatus($("find-status"), data.error || "Couldn't find that application.", true);
+      return;
+    }
+    // Hand off to the existing discover flow: fill the URL box and run it.
+    $("url").value = data.url;
+    setStatus($("find-status"), `Found ${data.reference} — loading documents…`);
+    await discover();
+    setStatus($("find-status"), "");
+  } catch (e) {
+    setStatus($("find-status"), String(e), true);
+  } finally {
+    $("find-ref").disabled = false;
+  }
+}
+
 function renderResults(data) {
   $("lpa").textContent = data.lpa;
   $("system").textContent = data.system;
@@ -159,5 +218,10 @@ function handleEvent(ev) {
 
 $("discover").addEventListener("click", discover);
 $("url").addEventListener("keydown", (e) => { if (e.key === "Enter") discover(); });
+$("find-ref").addEventListener("click", findByReference);
+$("ref-number").addEventListener("keydown", (e) => { if (e.key === "Enter") findByReference(); });
+$("ref-council").addEventListener("keydown", (e) => { if (e.key === "Enter") $("ref-number").focus(); });
 $("browse").addEventListener("click", browse);
 $("download").addEventListener("click", download);
+
+loadCouncils();

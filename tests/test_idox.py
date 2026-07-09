@@ -11,6 +11,7 @@ from urllib.parse import parse_qs, urlparse
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from plangrab.engine.base import ReferenceLookupError
 from plangrab.engine.idox import IdoxScraper
 
 FIX = Path(__file__).resolve().parent / "fixtures"
@@ -113,10 +114,123 @@ def test_missing_table_raises():
         checks += 1
 
 
+# -- resolve_reference (reference -> documents URL) -----------------------
+
+BASE = "https://pa.example.gov.uk"
+SEARCH_PAGE = f"{BASE}/online-applications/search.do?action=simple&searchType=Application"
+_SEARCH_FORM = (
+    '<html><body><form>'
+    '<input type="hidden" name="_csrf" value="tok123">'
+    '<input type="text" name="searchCriteria.simpleSearchString">'
+    '</form></body></html>'
+)
+
+
+class SearchClient:
+    """Queued GETs + queued POSTs; records POST bodies for assertions."""
+    def __init__(self, gets, posts):
+        self._gets = list(gets)
+        self._posts = list(posts)
+        self.posts = []
+
+    def get(self, url, **kw):
+        return self._gets.pop(0)
+
+    def post(self, url, **kw):
+        self.posts.append((url, kw))
+        return self._posts.pop(0)
+
+
+def _detail(ref, keyval):
+    return (f"<html><head><title>{ref} | Example</title></head><body>"
+            f"<p>Ref. No: {ref}</p>"
+            f'<a href="/online-applications/applicationDetails.do?activeTab=summary&keyVal={keyval}">Summary</a>'
+            f"</body></html>")
+
+
+def test_resolve_reference_disambiguates_by_ref_field():
+    # Searching the permission 22/05126/LA also returns the COND that quotes it.
+    # We must return the permission's keyVal, not the COND decoy.
+    ref = "22/05126/LA"
+    client = SearchClient(
+        gets=[FakeResponse(_SEARCH_FORM, SEARCH_PAGE),
+              FakeResponse(_detail(ref, "RK3S32DNMZE00"), f"{BASE}/online-applications/applicationDetails.do")],
+        posts=[FakeResponse(_fixture("idox_search_results.html"), f"{BASE}/online-applications/simpleSearchResults.do")],
+    )
+    url = IdoxScraper("Example", BASE).resolve_reference(client, ref)
+    eq("keyVal=RK3S32DNMZE00" in url, True, "resolve: picked the permission's keyVal (not the COND decoy)")
+    eq("keyVal=RVIDUJDN06900" in url, False, "resolve: did NOT pick the COND decoy")
+    eq(parse_qs(urlparse(url).query)["activeTab"], ["documents"], "resolve: normalised to documents tab")
+    # The POST carried the reference and the form's hidden token.
+    body = client.posts[0][1]["data"]
+    eq(body["searchCriteria.simpleSearchString"], ref, "resolve: searched the reference")
+    eq(body["_csrf"], "tok123", "resolve: replayed the form's hidden inputs")
+
+
+def test_resolve_reference_matches_the_cond_when_asked():
+    # The mirror case: asking for the COND itself returns the COND's keyVal.
+    ref = "23/02163/COND"
+    client = SearchClient(
+        gets=[FakeResponse(_SEARCH_FORM, SEARCH_PAGE),
+              FakeResponse(_detail(ref, "RVIDUJDN06900"), f"{BASE}/online-applications/applicationDetails.do")],
+        posts=[FakeResponse(_fixture("idox_search_results.html"), f"{BASE}/online-applications/simpleSearchResults.do")],
+    )
+    url = IdoxScraper("Example", BASE).resolve_reference(client, ref)
+    eq("keyVal=RVIDUJDN06900" in url, True, "resolve: matched the COND's own Ref. No")
+
+
+def test_resolve_reference_single_match_redirect():
+    # A single exact match redirects straight to the detail page (no result rows).
+    ref = "89/00253/L"
+    client = SearchClient(
+        gets=[FakeResponse(_SEARCH_FORM, SEARCH_PAGE),
+              FakeResponse(_detail(ref, "LEGACYKEY01"), f"{BASE}/online-applications/applicationDetails.do")],
+        posts=[FakeResponse(_detail(ref, "LEGACYKEY01"), f"{BASE}/online-applications/applicationDetails.do")],
+    )
+    url = IdoxScraper("Example", BASE).resolve_reference(client, ref)
+    eq("keyVal=LEGACYKEY01" in url, True, "resolve: single-match redirect keyVal")
+
+
+def test_resolve_reference_no_match_raises():
+    client = SearchClient(
+        gets=[FakeResponse(_SEARCH_FORM, SEARCH_PAGE)],
+        posts=[FakeResponse(_fixture("idox_search_results.html"), f"{BASE}/online-applications/simpleSearchResults.do")],
+    )
+    try:
+        IdoxScraper("Example", BASE).resolve_reference(client, "99/99999/XYZ")
+        raise AssertionError("expected ReferenceLookupError when nothing matches")
+    except ReferenceLookupError:
+        global checks
+        checks += 1
+
+
+def test_resolve_reference_verify_rejects_wrong_page():
+    # keyVal resolves, but the verify page doesn't echo the reference -> error,
+    # rather than returning a silently-wrong URL.
+    ref = "22/05126/LA"
+    client = SearchClient(
+        gets=[FakeResponse(_SEARCH_FORM, SEARCH_PAGE),
+              FakeResponse("<html><body>totally different application</body></html>",
+                           f"{BASE}/online-applications/applicationDetails.do")],
+        posts=[FakeResponse(_fixture("idox_search_results.html"), f"{BASE}/online-applications/simpleSearchResults.do")],
+    )
+    try:
+        IdoxScraper("Example", BASE).resolve_reference(client, ref)
+        raise AssertionError("expected ReferenceLookupError when verify page doesn't echo the ref")
+    except ReferenceLookupError:
+        global checks
+        checks += 1
+
+
 if __name__ == "__main__":
     test_5col()
     test_6col_measure_and_blank_description()
     test_disclaimer_interstitial()
     test_normalise_url_forces_documents_tab()
     test_missing_table_raises()
+    test_resolve_reference_disambiguates_by_ref_field()
+    test_resolve_reference_matches_the_cond_when_asked()
+    test_resolve_reference_single_match_redirect()
+    test_resolve_reference_no_match_raises()
+    test_resolve_reference_verify_rejects_wrong_page()
     print(f"OK — {checks} IDOX checks passed.")

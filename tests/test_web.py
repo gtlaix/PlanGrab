@@ -67,9 +67,41 @@ def test_api_discover_bad_url_is_400():
     ok("error" in r.json(), "discover: error message returned")
 
 
+def test_api_councils_shape():
+    data = client.get("/api/councils").json()
+    councils = data["councils"]
+    ok(len(councils) > 0, "councils: non-empty")
+    ok(all(set(c) >= {"name", "base_url", "system", "supports_reference"} for c in councils[:5]),
+       "councils: each has name/base_url/system/supports_reference")
+    names = [c["name"] for c in councils]
+    eq(names, sorted(names, key=str.lower), "councils: sorted by name")
+    bristol = next((c for c in councils if c["name"].startswith("Bristol")), None)
+    ok(bristol is not None, "councils: Bristol present")
+    ok(bristol["supports_reference"] is True, "councils: IDOX supports reference search")
+    ok(bristol["base_url"].startswith("https://"), "councils: base_url is a URL")
+
+
+def test_api_resolve_bad_council_is_400():
+    # No network: an unknown council fails at scraper selection, before any fetch.
+    r = client.post("/api/resolve",
+                    json={"council": "https://example.com/nope", "reference": "23/02163/COND"})
+    eq(r.status_code, 400, "resolve: unknown council -> 400")
+    ok("error" in r.json(), "resolve: error message returned")
+
+
+def test_api_resolve_blank_reference_is_400():
+    r = client.post("/api/resolve",
+                    json={"council": "https://pa.bristol.gov.uk/online-applications/", "reference": "  "})
+    eq(r.status_code, 400, "resolve: blank reference -> 400")
+    ok("error" in r.json(), "resolve: blank-reference error returned")
+
+
 if __name__ == "__main__":
     test_pages_render_with_injected_date()
     test_api_compat_shape()
     test_api_coverage_map_shape()
     test_api_discover_bad_url_is_400()
+    test_api_councils_shape()
+    test_api_resolve_bad_council_is_400()
+    test_api_resolve_blank_reference_is_400()
     print(f"OK — {checks} web checks passed.")
