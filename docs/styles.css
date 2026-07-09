@@ -49,6 +49,15 @@ header h1 { margin: 0; font-size: 28px; letter-spacing: -0.02em; }
 }
 label { display: block; font-weight: 600; margin-bottom: 8px; font-size: 13px; }
 .row { display: flex; gap: 10px; }
+/* Reference search: council picker + reference field share the row. The council
+   picker is a touch narrower so the reference (the thing being typed) leads. */
+.ref-row #ref-council { flex: 2; }
+.ref-row #ref-number { flex: 3; }
+@media (max-width: 560px) {
+  .ref-row { flex-wrap: wrap; }
+  .ref-row #ref-council, .ref-row #ref-number { flex: 1 1 100%; }
+  .ref-row #find-ref { flex: 1 1 100%; }
+}
 input[type=url], input[type=text] {
   flex: 1; min-width: 0; padding: 10px 12px; border-radius: 8px;
   border: 1px solid var(--line); background: #0d0f14; color: var(--text); font-size: 14px;
