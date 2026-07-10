@@ -17,18 +17,24 @@ Set-Location $Here
 $env:PYTHONPATH = "$Here\lib;$Here"
 
 function Resolve-Python {
+    # Returns @{ Exe = <path>; Args = <string[]> } — a consistent shape so the
+    # call site can splat Args regardless of which branch matched. (Returning a
+    # bare @("py","-3") array here and doing `& $py ...` at the call site is a
+    # PowerShell trap: `&` stringifies a multi-element array into one command
+    # name — literally "py -3" — instead of invoking `py` with `-3` as an
+    # argument, so it fails with "term 'py -3' is not recognized" even though
+    # `py` is right there on PATH.)
     $bundled = Join-Path $Here "python\python.exe"
-    if (Test-Path $bundled) { return $bundled }
-    foreach ($cmd in @("py", "python")) {
-        $found = Get-Command $cmd -ErrorAction SilentlyContinue
-        if ($found) {
-            if ($cmd -eq "py") { return @("py", "-3") }
-            return @($found.Source)
-        }
-    }
-    throw "No Python found. Expected .\python\python.exe (see README) or Python on PATH."
+    if (Test-Path $bundled) { return @{ Exe = $bundled; Args = @() } }
+    $py = Get-Command py -ErrorAction SilentlyContinue
+    if ($py) { return @{ Exe = $py.Source; Args = @("-3") } }
+    $python = Get-Command python -ErrorAction SilentlyContinue
+    if ($python) { return @{ Exe = $python.Source; Args = @() } }
+    throw "No Python found. Expected .\python\python.exe (see README) or Python on PATH (either 'py' or 'python')."
 }
 
-$py = Resolve-Python
+$resolved = Resolve-Python
+$pyExe = $resolved.Exe
+$pyArgs = $resolved.Args
 Write-Host "Starting PlanGrab…"
-& $py -m plangrab.web.server
+& $pyExe @pyArgs -m plangrab.web.server

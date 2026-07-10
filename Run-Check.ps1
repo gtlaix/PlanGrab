@@ -11,19 +11,20 @@ Set-Location $Here
 $env:PYTHONPATH = "$Here\lib;$Here"
 
 function Resolve-Python {
+    # See Run.ps1's Resolve-Python for why this returns a consistent
+    # @{Exe=...; Args=...} shape instead of a bare array to splat.
     $bundled = Join-Path $Here "python\python.exe"
-    if (Test-Path $bundled) { return $bundled }
-    foreach ($cmd in @("py", "python")) {
-        $found = Get-Command $cmd -ErrorAction SilentlyContinue
-        if ($found) {
-            if ($cmd -eq "py") { return @("py", "-3") }
-            return @($found.Source)
-        }
-    }
-    throw "No Python found. Expected .\python\python.exe (see README) or Python on PATH."
+    if (Test-Path $bundled) { return @{ Exe = $bundled; Args = @() } }
+    $py = Get-Command py -ErrorAction SilentlyContinue
+    if ($py) { return @{ Exe = $py.Source; Args = @("-3") } }
+    $python = Get-Command python -ErrorAction SilentlyContinue
+    if ($python) { return @{ Exe = $python.Source; Args = @() } }
+    throw "No Python found. Expected .\python\python.exe (see README) or Python on PATH (either 'py' or 'python')."
 }
 
-$py = Resolve-Python
-& $py -m plangrab.selftest
+$resolved = Resolve-Python
+$pyExe = $resolved.Exe
+$pyArgs = $resolved.Args
+& $pyExe @pyArgs -m plangrab.selftest
 Write-Host ""
 Read-Host "Press Enter to close"   # keep the window open when double-clicked
