@@ -67,6 +67,20 @@ def sanitise(name: str) -> str:
     return name
 
 
+def reference_folder(reference: str, index: int, total: int) -> str:
+    """Folder name for one application in a batch, e.g. ``01. 87.03602.L``.
+
+    The reference's slashes become dots (a slash is a path separator, so it can't
+    live in a folder name), then the usual filename sanitiser strips anything
+    else illegal. The 1-based ``index`` is zero-padded to at least two digits
+    (to the width of ``total`` for larger batches) so the folders sort in the
+    order the references were given.
+    """
+    width = max(2, len(str(total))) if total else 2
+    safe_ref = sanitise(reference.replace("/", ".")) or "application"
+    return f"{index:0{width}d}. {safe_ref}"
+
+
 def dedupe(name: str, taken: set[str]) -> str:
     """Return ``name`` or ``name (2)`` etc. so it is unique within ``taken``.
 

@@ -6,7 +6,7 @@ Public surface used by the CLI and the web layer:
 """
 from .base import ReferenceLookupError
 from .config import Config
-from .download import download_all, make_client, user_agent_for
+from .download import download_all, download_references, make_client, user_agent_for
 from .models import DocMeta, FetchResult
 from .registry import (
     LpaRecord,
@@ -28,6 +28,7 @@ __all__ = [
     "UnsupportedSystemError",
     "default_registry",
     "download_all",
+    "download_references",
     "get_scraper",
     "make_client",
     "user_agent_for",

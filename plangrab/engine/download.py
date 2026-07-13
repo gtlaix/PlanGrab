@@ -17,10 +17,10 @@ from urllib.parse import unquote, urlparse
 
 import httpx
 
-from .base import Scraper
+from .base import ReferenceLookupError, Scraper
 from .config import Config
 from .models import DocMeta, FetchResult
-from .naming import dedupe, render_filename, sanitise
+from .naming import dedupe, reference_folder, render_filename, sanitise
 
 log = logging.getLogger("plangrab")
 
@@ -126,6 +126,83 @@ def download_all(
 
     _write_manifest(out, results)
     return results
+
+
+def download_references(
+    scraper: Scraper,
+    references: Iterable[str],
+    parent_dir: str | Path,
+    config: Config,
+    client: Optional[httpx.Client] = None,
+    progress: Optional[ProgressFn] = None,
+) -> list[dict]:
+    """Download several applications by reference, each into its own subfolder.
+
+    For every reference we resolve its documents page, discover its documents,
+    and download them into ``<parent_dir>/<NN. reference>`` (see
+    :func:`~plangrab.engine.naming.reference_folder`). One failing application
+    (an unresolvable reference, a page with no documents, a network error) is
+    recorded and skipped — it never aborts the rest of the batch.
+
+    ``progress`` receives structured events: ``app_start`` / ``app_discovered``
+    per application, the same per-file ``file`` events as :func:`download_all`
+    (each tagged with ``app_index`` + ``reference``), and ``app_done`` carrying
+    that application's summary. Returns the list of per-application summaries.
+    """
+    parent = Path(parent_dir)
+    parent.mkdir(parents=True, exist_ok=True)
+    refs = [r.strip() for r in references if r and r.strip()]
+    total = len(refs)
+
+    own_client = client is None
+    client = client or make_client(config, user_agent_for(scraper, config))
+
+    summaries: list[dict] = []
+    try:
+        for i, ref in enumerate(refs, start=1):
+            folder_name = reference_folder(ref, i, total)
+            sub = parent / folder_name
+            if progress:
+                progress({"type": "app_start", "app_index": i, "app_total": total,
+                          "reference": ref, "folder": folder_name})
+
+            summary = {"app_index": i, "reference": ref, "folder": folder_name,
+                       "status": "ok", "count": 0,
+                       "downloaded": 0, "skipped": 0, "failed": 0, "error": None}
+            try:
+                if i > 1:
+                    time.sleep(config.request_delay)  # polite between applications
+                url = scraper.resolve_reference(client, ref)
+                docs = scraper.discover(client, url)
+                summary["count"] = len(docs)
+                if progress:
+                    progress({"type": "app_discovered", "app_index": i,
+                              "reference": ref, "count": len(docs), "url": url})
+
+                def _tagged(ev: dict, _i: int = i, _ref: str = ref) -> None:
+                    ev = {**ev, "app_index": _i, "reference": _ref}
+                    progress(ev)  # only wired when progress is truthy (see below)
+
+                results = download_all(
+                    scraper, docs, sub, config, client=client,
+                    progress=_tagged if progress else None,
+                )
+                summary["downloaded"] = sum(r.status == "downloaded" for r in results)
+                summary["skipped"] = sum(r.status == "skipped" for r in results)
+                summary["failed"] = sum(r.status == "failed" for r in results)
+            except ReferenceLookupError as exc:
+                summary["status"], summary["error"] = "not_found", str(exc)
+            except Exception as exc:  # discovery / network — keep going
+                summary["status"], summary["error"] = "error", str(exc)
+                log.warning("batch: reference %s failed: %s", ref, exc)
+
+            summaries.append(summary)
+            if progress:
+                progress({"type": "app_done", **summary})
+    finally:
+        if own_client:
+            client.close()
+    return summaries
 
 
 def _download_one(

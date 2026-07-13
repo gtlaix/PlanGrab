@@ -39,6 +39,28 @@ POST /api/download   (streaming response, media type application/x-ndjson)
             …or, on a fatal pre-download error:
               {"type": "error", "message": str}
 
+POST /api/download-batch   (streaming response, media type application/x-ndjson)
+  request : {"council": "<portal-base-url>", "references": [str, ...], "folder": str}
+  stream  : one JSON object per line, in order:
+              {"type": "batch_start", "total_apps": int}
+              {"type": "app_start", "app_index": int, "app_total": int,
+               "reference": str, "folder": str}         # subfolder "NN. ref"
+              {"type": "app_discovered", "app_index": int, "reference": str,
+               "count": int, "url": str}
+              {"type": "file", "app_index": int, "reference": str, "index": int,
+               "total": int, "title": str, "filename": str,
+               "status": "downloaded"|"skipped"|"failed", "error": str|null}
+              {"type": "app_done", "app_index": int, "reference": str,
+               "folder": str, "status": "ok"|"not_found"|"error", "count": int,
+               "downloaded": int, "skipped": int, "failed": int, "error": str|null}
+              {"type": "done", "summary": {"apps": int, "apps_ok": int,
+               "apps_failed": int, "downloaded": int, "skipped": int,
+               "failed": int, "folder": str}}
+            …or, on a fatal pre-batch error:
+              {"type": "error", "message": str}
+            # Each application saves into its own "<folder>/NN. reference" subfolder;
+            # one bad reference is reported (app_done status) and skipped, never fatal.
+
 GET /api/pick-folder
   200     : {"path": "<absolute path>"}         # native dialog; "" if cancelled
   200     : {"path": "", "error": "<message>"}  # dialog unavailable -> UI uses manual field
@@ -65,7 +87,7 @@ from pydantic import BaseModel
 
 from plangrab.engine import (
     Config, ReferenceLookupError, Registry, UnknownSystemError, download_all,
-    get_scraper, make_client, user_agent_for,
+    download_references, get_scraper, make_client, user_agent_for,
 )
 from plangrab.engine.base import Scraper
 from plangrab.engine.registry import SYSTEMS
@@ -93,6 +115,12 @@ class DownloadRequest(BaseModel):
 class ResolveRequest(BaseModel):
     council: str      # the portal base URL (from /api/councils)
     reference: str
+
+
+class BatchRequest(BaseModel):
+    council: str            # the portal base URL (from /api/councils)
+    references: list[str]   # one application reference each
+    folder: str             # parent folder; each app gets its own subfolder
 
 
 def _doc_json(d) -> dict:
@@ -202,6 +230,53 @@ def download(req: DownloadRequest):
                     "failed": sum(r.status == "failed" for r in results),
                     "folder": folder,
                     "manifest": str(Path(folder) / "manifest.csv"),
+                }})
+            except Exception as exc:
+                events.put({"type": "error", "message": str(exc)})
+            finally:
+                if client is not None:
+                    client.close()
+                events.put(None)  # sentinel: stream complete
+
+        threading.Thread(target=work, daemon=True).start()
+        while True:
+            ev = events.get()
+            if ev is None:
+                break
+            yield json.dumps(ev) + "\n"
+
+    return StreamingResponse(gen(), media_type="application/x-ndjson")
+
+
+@app.post("/api/download-batch")
+def download_batch(req: BatchRequest):
+    def gen():
+        events: "queue.Queue" = queue.Queue()
+
+        def progress(ev: dict) -> None:
+            events.put(ev)
+
+        def work() -> None:
+            client = None
+            try:
+                refs = [r.strip() for r in req.references if r and r.strip()]
+                if not refs:
+                    events.put({"type": "error", "message": "No references given."})
+                    return
+                scraper = get_scraper(req.council, _config.lpa_registry)
+                client = make_client(_config, user_agent_for(scraper, _config))
+                events.put({"type": "batch_start", "total_apps": len(refs)})
+                summaries = download_references(scraper, refs, req.folder, _config,
+                                                client=client, progress=progress)
+                folder = str(Path(req.folder).expanduser().resolve())
+                events.put({"type": "done", "summary": {
+                    "apps": len(summaries),
+                    "apps_ok": sum(s["status"] == "ok" for s in summaries),
+                    "apps_failed": sum(s["status"] != "ok" for s in summaries),
+                    "downloaded": sum(s["downloaded"] for s in summaries),
+                    "skipped": sum(s["skipped"] for s in summaries),
+                    "failed": sum(s["failed"] for s in summaries),
+                    "folder": folder,
                 }})
             except Exception as exc:
                 events.put({"type": "error", "message": str(exc)})

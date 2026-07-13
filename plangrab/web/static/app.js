@@ -126,19 +126,19 @@ function setTag(index, status) {
   tag.textContent = status;
 }
 
-async function browse() {
-  setStatus($("folder-note"), "Opening folder picker…");
+async function browseInto(inputId, noteId) {
+  setStatus($(noteId), "Opening folder picker…");
   try {
     const resp = await fetch("/api/pick-folder");
     const data = await resp.json();
     if (data.path) {
-      $("folder").value = data.path;
-      setStatus($("folder-note"), "");
+      $(inputId).value = data.path;
+      setStatus($(noteId), "");
     } else {
-      setStatus($("folder-note"), data.error || "No folder chosen — you can paste a path instead.");
+      setStatus($(noteId), data.error || "No folder chosen — you can paste a path instead.");
     }
   } catch (e) {
-    setStatus($("folder-note"), "Picker unavailable — paste a path instead.", true);
+    setStatus($(noteId), "Picker unavailable — paste a path instead.", true);
   }
 }
 
@@ -216,12 +216,121 @@ function handleEvent(ev) {
   }
 }
 
+// -- Batch download: a list of references, each into its own subfolder ------
+
+function setBatchTag(li, cls, text) {
+  const tag = li.querySelector(".tag");
+  tag.className = `tag ${cls}`;
+  tag.textContent = text;
+}
+
+async function batchDownload() {
+  const base = councilBaseUrl.get($("batch-council").value.trim());
+  const folder = $("batch-folder").value.trim();
+  const refs = $("batch-refs").value.split("\n").map((s) => s.trim()).filter(Boolean);
+  if (!base) { setStatus($("batch-status"), "Pick a council from the list first.", true); return; }
+  if (!refs.length) { setStatus($("batch-status"), "Enter at least one reference.", true); return; }
+  if (!folder) { setStatus($("batch-status"), "Choose a folder first.", true); return; }
+
+  $("batch-download").disabled = true;
+  const list = $("batch-list");
+  list.innerHTML = "";
+  const rows = new Map(); // app_index (1-based) -> <li>
+  refs.forEach((ref, i) => {
+    const li = document.createElement("li");
+    li.innerHTML =
+      `<span class="idx">${i + 1}</span>` +
+      `<span><div class="title"></div><div class="meta"></div></span>` +
+      `<span class="tag pending">queued</span>`;
+    li.querySelector(".title").textContent = ref;
+    list.appendChild(li);
+    rows.set(i + 1, li);
+  });
+  setStatus($("batch-status"), "Starting…");
+
+  try {
+    const resp = await fetch("/api/download-batch", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ council: base, references: refs, folder }),
+    });
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let nl;
+      while ((nl = buffer.indexOf("\n")) >= 0) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (line) handleBatchEvent(JSON.parse(line), rows);
+      }
+    }
+  } catch (e) {
+    setStatus($("batch-status"), String(e), true);
+  } finally {
+    $("batch-download").disabled = false;
+  }
+}
+
+function handleBatchEvent(ev, rows) {
+  switch (ev.type) {
+    case "batch_start":
+      setStatus($("batch-status"), `Downloading ${ev.total_apps} application${ev.total_apps === 1 ? "" : "s"}…`);
+      break;
+    case "app_start": {
+      const li = rows.get(ev.app_index);
+      if (li) { setBatchTag(li, "active", "resolving…"); li.querySelector(".meta").textContent = ev.folder; }
+      break;
+    }
+    case "app_discovered": {
+      const li = rows.get(ev.app_index);
+      if (li) { li._done = 0; setBatchTag(li, "active", `0/${ev.count}`); }
+      break;
+    }
+    case "file": {
+      const li = rows.get(ev.app_index);
+      if (li) { li._done = (li._done || 0) + 1; setBatchTag(li, "active", `${li._done}/${ev.total}`); }
+      break;
+    }
+    case "app_done": {
+      const li = rows.get(ev.app_index);
+      if (!li) break;
+      if (ev.status === "ok") {
+        const parts = [`${ev.downloaded} downloaded`];
+        if (ev.skipped) parts.push(`${ev.skipped} skipped`);
+        if (ev.failed) parts.push(`${ev.failed} failed`);
+        setBatchTag(li, ev.failed ? "failed" : "downloaded", ev.failed ? "done*" : "done");
+        li.querySelector(".meta").textContent = `${ev.folder} — ${parts.join(", ")}`;
+      } else {
+        setBatchTag(li, "failed", ev.status === "not_found" ? "not found" : "error");
+        li.querySelector(".meta").textContent = ev.error || "";
+      }
+      break;
+    }
+    case "done": {
+      const s = ev.summary;
+      setStatus($("batch-status"),
+        `Done — ${s.apps_ok}/${s.apps} applications, ${s.downloaded} files downloaded` +
+        (s.failed ? `, ${s.failed} failed` : "") + `. Saved to ${s.folder}`);
+      break;
+    }
+    case "error":
+      setStatus($("batch-status"), ev.message, true);
+      break;
+  }
+}
+
 $("discover").addEventListener("click", discover);
 $("url").addEventListener("keydown", (e) => { if (e.key === "Enter") discover(); });
 $("find-ref").addEventListener("click", findByReference);
 $("ref-number").addEventListener("keydown", (e) => { if (e.key === "Enter") findByReference(); });
 $("ref-council").addEventListener("keydown", (e) => { if (e.key === "Enter") $("ref-number").focus(); });
-$("browse").addEventListener("click", browse);
+$("browse").addEventListener("click", () => browseInto("folder", "folder-note"));
 $("download").addEventListener("click", download);
+$("batch-browse").addEventListener("click", () => browseInto("batch-folder", "batch-folder-note"));
+$("batch-download").addEventListener("click", batchDownload);
 
 loadCouncils();

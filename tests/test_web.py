@@ -5,6 +5,7 @@ error path of /api/discover). Run:  python tests/test_web.py
 Note: /api/pick-folder and the live /api/discover|/api/download paths are NOT
 tested here — they open a native dialog / hit council sites.
 """
+import json
 import sys
 from pathlib import Path
 
@@ -96,6 +97,30 @@ def test_api_resolve_blank_reference_is_400():
     ok("error" in r.json(), "resolve: blank-reference error returned")
 
 
+def _ndjson(resp):
+    return [json.loads(line) for line in resp.text.splitlines() if line.strip()]
+
+
+def test_api_download_batch_empty_refs_streams_error():
+    # No references -> a clean error event, no network touched.
+    r = client.post("/api/download-batch",
+                    json={"council": "https://pa.bristol.gov.uk/online-applications/",
+                          "references": [], "folder": "/tmp/pg_batch_test"})
+    eq(r.status_code, 200, "batch: streaming response is 200")
+    events = _ndjson(r)
+    ok(any(e["type"] == "error" for e in events), "batch: empty refs -> error event")
+
+
+def test_api_download_batch_bad_council_streams_error():
+    # Unknown council fails at scraper selection (before any fetch) -> error event.
+    r = client.post("/api/download-batch",
+                    json={"council": "https://example.com/nope",
+                          "references": ["23/02163/COND"], "folder": "/tmp/pg_batch_test"})
+    eq(r.status_code, 200, "batch: streaming response is 200")
+    events = _ndjson(r)
+    ok(any(e["type"] == "error" for e in events), "batch: unknown council -> error event")
+
+
 if __name__ == "__main__":
     test_pages_render_with_injected_date()
     test_api_compat_shape()
@@ -104,4 +129,6 @@ if __name__ == "__main__":
     test_api_councils_shape()
     test_api_resolve_bad_council_is_400()
     test_api_resolve_blank_reference_is_400()
+    test_api_download_batch_empty_refs_streams_error()
+    test_api_download_batch_bad_council_streams_error()
     print(f"OK — {checks} web checks passed.")
