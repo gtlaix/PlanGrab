@@ -51,8 +51,9 @@ plangrab/
     download.py      # session, retries, streaming, skip-existing, manifest
     config.py        # loads config.toml
   web/
-    app.py           # FastAPI: /api/discover, /api/download, /api/compat, /api/smoke-test
-    server.py        # picks a free port, opens the browser
+    app.py           # FastAPI: /api/discover, /api/download, /api/compat, /api/smoke-test,
+                     #   /api/ping (+ CORS/Private-Network access for the hosted UI)
+    server.py        # binds a known port ([server] ports), opens the browser
     static/          # downloader UI + dashboard.html (drop a Claude Design build in here)
   cli.py             # full engine, no GUI — build/test this first
   selftest.py        # `python -m plangrab.selftest` — is the install healthy + online?
@@ -183,15 +184,34 @@ and *that* page is cleanly parseable.
 
 ---
 
-## Hosted coverage site & self-updating registry
+## Hosted site (downloader + coverage) & self-updating registry
 
-The **coverage page is hostable** (it's pure static data — no council requests,
-so no centralised-IP problem): `python tools/build_site.py` regenerates `docs/`
-— the coverage map, searchable council table, and a Windows-download button —
-which GitHub Pages serves directly (Settings → Pages → branch `master`,
-folder `/docs`). Downloads themselves always run from the user's own machine;
-that's deliberate (a hosted downloader would hammer council portals from one
-datacenter IP and get blocked).
+`python tools/build_site.py` regenerates `docs/`, which GitHub Pages serves
+directly (Settings → Pages → branch `master`, folder `/docs`). It publishes two
+pages, both transformed from the live app's own `static/` assets so the design
+never diverges:
+
+- **`index.html` — the Downloader.** A shareable URL anyone can open: type a
+  reference (or paste a documents URL), pick a folder, download. It can't scrape
+  council portals *itself* — browsers block a web page from reading cross-origin
+  responses (CORS), and that's a browser rule, not something the app can switch
+  off. So the hosted page drives a small **local helper** over
+  `http://127.0.0.1`: the same engine, run on the user's own machine. **The
+  fetches still leave from the user's IP** — deliberately, because a centrally
+  hosted downloader would hammer council portals from one datacenter IP and get
+  blocked. First-time users download and run the helper once (the page detects it
+  and onboards them); a browser may show a one-off "allow local network" prompt.
+  This trades a small local install for a bookmarkable URL and always-current UI.
+- **`coverage.html` — the "does my council work?" dashboard.** Pure static data
+  (baked JSON, zero council requests), the coverage map + searchable table.
+
+Mechanics that make the hosted downloader reach the local helper live in
+`web/app.py` (CORS for the configured Pages origin + Chrome's Private Network
+Access preflight, and a cheap `/api/ping`), `web/server.py` (a *known* port from
+`[server] ports` so the page can find the helper), and `static/app.js`
+(auto-detects whether it's the helper's own UI or the hosted page, discovers the
+helper, and gates the form behind a live connection). Configure the allowed
+origin / ports under `[server]` in `config.toml`.
 
 The local app completes the loop by **self-updating its council registry**: on
 startup it quietly fetches `lpa_registry.csv` / `compat_status.json` /
@@ -340,7 +360,7 @@ A fully offline test suite (no network, no third-party test runner) — run it w
 ```
 python tests/run_all.py
 ```
-128 checks across 9 modules (`tests/test_*.py`), using small hand-built fixtures
+Checks across 12 modules (`tests/test_*.py`), using small hand-built fixtures
 (`tests/fixtures/`), a fake HTTP client, and Starlette's `TestClient` so nothing
 hits a council site:
 - **test_idox** — the heart of the app: column mapping (5-col vs the 6-col
@@ -354,7 +374,9 @@ hits a council site:
 - **test_download** — extension derivation (Content-Disposition → URL →
   Content-Type → hint; what preserves the original format) and the manifest writer.
 - **test_web** — the FastAPI layer (TestClient): page render + date injection,
-  `/api/compat`, `/api/coverage-map`, and the `/api/discover` error path.
+  `/api/compat`, `/api/coverage-map`, the `/api/discover` error path, and the
+  hosted-UI transport (`/api/ping`, CORS for the Pages origin + Private Network
+  Access preflight, and rejection of untrusted origins).
 - **test_registry_data** — guards the *live* `lpa_registry.csv` (via
   `tools/check_registry.py`) so a bad pasted row fails the suite.
 - **test_compat / test_build_map / test_naming** — status I/O + dashboard merge,

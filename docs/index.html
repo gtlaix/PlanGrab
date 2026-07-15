@@ -3,81 +3,103 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PlanGrab — bulk-download UK planning documents</title>
+  <title>PlanGrab</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="stylesheet" href="dashboard.css">
 </head>
 <body>
-  <main class="wide">
+  <!--
+    Functional placeholder UI. The polished visual design produced in Claude
+    Design drops in here, targeting the JSON contract documented in web/app.py.
+    Keep the element ids / event flow, restyle freely.
+  -->
+  <main>
     <header>
       <div class="brandbar">
         <h1>PlanGrab</h1>
-        <a class="brand-github" href="https://github.com/gtlaix/PlanGrab">GitHub &#8599;</a>
-      </div>
-      <p class="byline">Developed with Claude Code by George Lewis. Last updated: 9 July 2026.</p>
-      <h2 class="page-title">LPA Coverage</h2>
-      <p class="tagline">Councils the tool currently works with — searchable below.</p>
-    </header>
-
-    
-    <section class="card hero">
-      <p><strong>PlanGrab</strong> bulk-downloads every document on a UK planning
-      application — original files, sensibly named — from council portals that
-      offer no &ldquo;download all&rdquo; button.</p>
-      <p>It runs on <strong>your own computer</strong> (downloads come from your
-      IP, politely), needs <strong>no installation and no admin rights</strong>:
-      unzip and run.</p>
-      <p class="hero-actions">
-        <a class="download-btn" href="https://github.com/gtlaix/PlanGrab/releases/latest/download/PlanGrab-win64.zip">&#11015;&#65039; Download for Windows (~19&nbsp;MB)</a>
-        <a class="repo-link" href="https://github.com/gtlaix/PlanGrab">Source &amp; docs on GitHub</a>
-      </p>
-    </section>
-
-    <section id="coverage" class="card cov"></section>
-
-    <section class="card map-card">
-      <div class="map-head">
-        <h2>Coverage map</h2>
-        <div class="map-legend">
-          <span><i class="sw ok"></i> works</span>
-          <span><i class="sw fail"></i> not working</span>
-          <span><i class="sw addable"></i> supported system &mdash; ready to add</span>
-          <span><i class="sw known"></i> other system, not yet supported</span>
-          <span><i class="sw unknown"></i> system unknown</span>
+        <div class="page-toggle on-left">
+          <span class="slider"></span>
+          <a class="active" href="index.html">Downloader</a>
+          <a href="coverage.html">LPA Coverage</a>
         </div>
       </div>
-      <p id="map-systems" class="map-systems"></p>
-      <div class="map-wrap">
-        <svg id="map" preserveAspectRatio="xMidYMid meet" aria-label="LPA coverage map"></svg>
-        <div id="map-tip" class="map-tip hidden"></div>
+      <p class="byline">Developed with Claude Code by George Lewis. Last updated: 15 July 2026.</p>
+      <p class="tagline">Many LPA planning portals do not provide a 'download all' button. This is that button.</p>
+    </header>
+
+    <!-- Hosted-UI connection state. On the helper's own local UI these stay
+         hidden (JS shows the app immediately); on GitHub Pages they gate the
+         form behind a live connection to the helper on this computer. -->
+    <div id="helper-status" class="helper-status hidden">
+      <span class="dot"></span>
+      <span class="helper-msg"></span>
+    </div>
+
+    <section id="helper-onboarding" class="card onboarding hidden">
+      <h2>Run PlanGrab on this computer</h2>
+      <p>Downloading runs on your own machine, so files come from
+        <strong>your IP</strong> (never a shared server) and save straight to a
+        folder you choose. You just need to start the small PlanGrab helper — once.</p>
+      <ol class="steps">
+        <li>
+          <a class="download-btn" href="https://github.com/gtlaix/PlanGrab/releases/latest/download/PlanGrab-win64.zip">&#11015;&#65039; Download PlanGrab for Windows (~19&nbsp;MB)</a>
+        </li>
+        <li>Unzip it anywhere and double-click <strong>Run</strong> — no installation, no admin rights.</li>
+        <li>If your browser asks to <em>allow access to your local network</em>, choose <strong>Allow</strong>.</li>
+        <li>This page connects automatically once the helper is running.
+          <button id="helper-retry" class="secondary">Check now</button>
+        </li>
+      </ol>
+      <p class="muted">Already running it, or not on Windows? This page connects as soon as the helper is up.</p>
+    </section>
+
+    <div id="app-body" class="hidden">
+    <section class="card">
+      <label for="ref-council">Find by application reference</label>
+      <div class="row ref-row">
+        <input id="ref-council" list="council-list" placeholder="Council (type to search)…" autocomplete="off" spellcheck="false">
+        <input id="ref-number" type="text" placeholder="Reference, e.g. 23/02163/COND" autocomplete="off" spellcheck="false">
+        <button id="find-ref">Find</button>
       </div>
+      <datalist id="council-list"></datalist>
+      <p id="find-status" class="status"></p>
     </section>
 
     <section class="card">
-      <div class="controls">
-        <input id="search" type="search" placeholder="Search council name…" autocomplete="off">
-        <select id="filter-system"><option value="">All systems</option></select>
-        <select id="filter-status"><option value="">All statuses</option></select>
-        <span class="spacer"></span>
-        <button id="recheck" class="secondary" hidden title="Re-run discover() checks in the background">Re-run checks</button>
+      <label for="url">…or paste the Documents Page URL</label>
+      <div class="row">
+        <input id="url" type="url" placeholder="e.g. https://pa.bristol.gov.uk/online-applications/applicationDetails.do?activeTab=documents&amp;keyVal=..." autocomplete="off">
+        <button id="discover">Discover</button>
       </div>
-      <p id="recheck-status" class="status"></p>
-      <table id="grid">
-        <thead>
-          <tr>
-            <th data-sort="lpa_name">LPA</th>
-            <th data-sort="system">System</th>
-            <th data-sort="status">Status</th>
-            <th data-sort="doc_count" class="num">Docs found in example</th>
-            <th data-sort="last_checked">Last checked</th>
-            <th>Example</th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
-      <p id="empty" class="muted hidden">No rows match.</p>
+      <p id="discover-status" class="status"></p>
     </section>
+
+    <section id="results" class="card hidden">
+      <div class="results-head">
+        <div>
+          <strong id="lpa"></strong>
+          <span id="system" class="muted"></span>
+        </div>
+        <span id="count" class="pill"></span>
+      </div>
+      <p id="order-note" class="muted hidden">Documents are listed newest to oldest.</p>
+      <ol id="doc-list"></ol>
+
+      <div class="folder">
+        <label for="folder">Save to folder</label>
+        <div class="row">
+          <input id="folder" type="text" placeholder="Choose or paste a folder path…">
+          <button id="browse" class="secondary">Browse…</button>
+        </div>
+        <p id="folder-note" class="status"></p>
+      </div>
+
+      <button id="download" disabled>Download all</button>
+      <div id="progress" class="progress hidden"><div id="progress-bar"></div></div>
+      <p id="download-status" class="status"></p>
+    </section>
+    </div><!-- /#app-body -->
   </main>
-  <script src="site.js"></script>
+
+  <script src="app.js"></script>
 </body>
 </html>

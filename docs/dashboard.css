@@ -85,12 +85,3 @@ svg#map path:hover { fill: var(--accent); }
 .map-tip .t-status.addable { color: #6ec1e4; }
 .map-tip .t-status.known { color: #e0a85a; }
 .map-tip .t-status.unknown { color: var(--muted); }
-
-/* --- hosted-site additions --- */
-.hero p { margin: 0.4em 0; }
-.hero-actions { display: flex; gap: 1em; align-items: center; flex-wrap: wrap; margin-top: 0.9em !important; }
-.download-btn { display: inline-block; background: var(--accent, #2f7d4f); color: #fff !important;
-  padding: 0.55em 1.1em; border-radius: 8px; font-weight: 600; text-decoration: none; }
-.download-btn:hover { filter: brightness(1.1); }
-.repo-link { opacity: 0.85; }
-.brand-github { margin-left: auto; font-weight: 600; }
