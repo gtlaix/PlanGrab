@@ -43,11 +43,19 @@ GET /api/pick-folder
   200     : {"path": "<absolute path>"}         # native dialog; "" if cancelled
   200     : {"path": "", "error": "<message>"}  # dialog unavailable -> UI uses manual field
 
+GET /api/ping
+  200     : {"app": "plangrab", "version": str}  # liveness probe for the hosted UI
+
 GET /
   Serves static/index.html (the UI).
+
+The hosted (GitHub Pages) UI is a cross-origin caller, so this app also sends
+CORS headers for the configured Pages origin (and localhost) and answers
+Chrome's Private Network Access preflight — see the middleware below.
 """
 from __future__ import annotations
 
+import inspect
 import json
 import os
 import queue
@@ -59,10 +67,12 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from plangrab import __version__
 from plangrab.engine import (
     Config, ReferenceLookupError, Registry, UnknownSystemError, download_all,
     get_scraper, make_client, user_agent_for,
@@ -79,6 +89,47 @@ STATIC_DIR = Path(__file__).resolve().parent / "static"
 
 app = FastAPI(title="PlanGrab")
 _config = Config.load()
+
+# --- Cross-origin access for the hosted (GitHub Pages) UI -------------------
+# PlanGrab's UI can be served from GitHub Pages while the download still runs
+# from this local helper (so requests keep coming from the user's own IP). That
+# makes the hosted page a *cross-origin* caller of this server, so we must:
+#   1. allow the exact Pages origin via CORS (localhost is left wide-open for
+#      dev and for the helper serving its own UI); and
+#   2. answer Chrome's Private Network Access preflight, since a public HTTPS
+#      page reaching into 127.0.0.1 is treated as a "more private" network.
+# The allowlist is kept tight on purpose: /api/download and /api/pick-folder
+# have side effects, so only the trusted origin (and localhost) may drive them.
+_cors_kwargs = dict(
+    allow_origins=[_config.allowed_origin],
+    allow_origin_regex=r"https?://(localhost|127\.0\.0\.1)(:\d+)?",
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["Content-Type"],
+)
+# Chrome's Private Network Access preflight: a public HTTPS page reaching into
+# 127.0.0.1 counts as a "more private" network and must be granted explicitly.
+# Recent Starlette handles this via `allow_private_network` (and 400s the
+# preflight without it); older versions in our supported range don't know the
+# header at all, so we add it ourselves. Feature-detect to work across both.
+_cors_supports_pna = "allow_private_network" in inspect.signature(CORSMiddleware).parameters
+if _cors_supports_pna:
+    _cors_kwargs["allow_private_network"] = True
+app.add_middleware(CORSMiddleware, **_cors_kwargs)
+
+if not _cors_supports_pna:
+    @app.middleware("http")
+    async def _grant_private_network(request, call_next):
+        response = await call_next(request)
+        if request.headers.get("access-control-request-private-network") == "true":
+            response.headers["Access-Control-Allow-Private-Network"] = "true"
+        return response
+
+
+@app.get("/api/ping")
+def ping():
+    """Cheap liveness probe. The hosted UI polls this across candidate ports to
+    discover the running helper and to show a live connection indicator."""
+    return {"app": "plangrab", "version": __version__}
 
 
 class DiscoverRequest(BaseModel):

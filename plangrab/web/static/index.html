@@ -26,6 +26,33 @@
       <p class="tagline">Many LPA planning portals do not provide a 'download all' button. This is that button.</p>
     </header>
 
+    <!-- Hosted-UI connection state. On the helper's own local UI these stay
+         hidden (JS shows the app immediately); on GitHub Pages they gate the
+         form behind a live connection to the helper on this computer. -->
+    <div id="helper-status" class="helper-status hidden">
+      <span class="dot"></span>
+      <span class="helper-msg"></span>
+    </div>
+
+    <section id="helper-onboarding" class="card onboarding hidden">
+      <h2>Run PlanGrab on this computer</h2>
+      <p>Downloading runs on your own machine, so files come from
+        <strong>your IP</strong> (never a shared server) and save straight to a
+        folder you choose. You just need to start the small PlanGrab helper — once.</p>
+      <ol class="steps">
+        <li>
+          <a class="download-btn" href="https://github.com/gtlaix/PlanGrab/releases/latest/download/PlanGrab-win64.zip">&#11015;&#65039; Download PlanGrab for Windows (~19&nbsp;MB)</a>
+        </li>
+        <li>Unzip it anywhere and double-click <strong>Run</strong> — no installation, no admin rights.</li>
+        <li>If your browser asks to <em>allow access to your local network</em>, choose <strong>Allow</strong>.</li>
+        <li>This page connects automatically once the helper is running.
+          <button id="helper-retry" class="secondary">Check now</button>
+        </li>
+      </ol>
+      <p class="muted">Already running it, or not on Windows? This page connects as soon as the helper is up.</p>
+    </section>
+
+    <div id="app-body" class="hidden">
     <section class="card">
       <label for="ref-council">Find by application reference</label>
       <div class="row ref-row">
@@ -70,6 +97,7 @@
       <div id="progress" class="progress hidden"><div id="progress-bar"></div></div>
       <p id="download-status" class="status"></p>
     </section>
+    </div><!-- /#app-body -->
   </main>
 
   <script src="/static/app.js"></script>

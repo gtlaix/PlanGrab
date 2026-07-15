@@ -100,3 +100,26 @@ ol#doc-list li .meta { color: var(--muted); font-size: 12px; }
   background: var(--accent); transition: width .2s ease;
 }
 #progress-bar.has-failures { background: var(--skip); }
+
+/* --- Hosted-UI helper connection state ------------------------------------ */
+.helper-status {
+  display: flex; align-items: center; gap: 10px;
+  padding: 10px 14px; margin-bottom: 18px; border-radius: var(--radius);
+  border: 1px solid var(--line); background: var(--card); font-size: 13px;
+}
+.helper-status .dot { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); flex: 0 0 auto; }
+.helper-status.connected { border-color: rgba(56,193,114,0.4); }
+.helper-status.connected .dot { background: var(--ok); }
+.helper-status.connected .helper-msg { color: var(--ok); }
+.helper-status.disconnected { border-color: rgba(227,83,79,0.35); }
+.helper-status.disconnected .dot { background: var(--fail); }
+
+.onboarding h2 { margin: 0 0 10px; font-size: 18px; letter-spacing: -0.01em; }
+.onboarding p { margin: 0 0 12px; }
+.onboarding .steps { margin: 0 0 8px; padding-left: 20px; }
+.onboarding .steps li { margin: 10px 0; }
+.download-btn {
+  display: inline-block; background: var(--ok); color: #06210f !important;
+  padding: 10px 16px; border-radius: 8px; font-weight: 700; text-decoration: none;
+}
+.download-btn:hover { filter: brightness(1.08); }

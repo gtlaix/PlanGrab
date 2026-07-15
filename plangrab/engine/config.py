@@ -15,6 +15,10 @@ except ModuleNotFoundError:  # pragma: no cover - dev on <3.11
 
 DEFAULT_TEMPLATE = "{index:03d} of {total:03d} - {title} - {plan_number} - {date}"
 DEFAULT_UA = "PlanGrab/0.1 (+planning document downloader; contact site admin if issues)"
+# Origin of the hosted GitHub Pages UI, allowed to call the local helper (CORS).
+DEFAULT_ALLOWED_ORIGIN = "https://gtlaix.github.io"
+# Ports the local helper tries in order; the hosted page probes the same list.
+DEFAULT_PORTS = [8756, 8757, 8758, 8759, 8760]
 
 
 @dataclass
@@ -32,6 +36,8 @@ class Config:
         "https://raw.githubusercontent.com/gtlaix/PlanGrab/master/data")
     lpa_registry: dict[str, str] = field(default_factory=dict)  # host -> council name
     system_user_agents: dict[str, str] = field(default_factory=dict)  # system id -> UA override
+    allowed_origin: str = DEFAULT_ALLOWED_ORIGIN  # hosted UI origin allowed to call the helper
+    ports: list[int] = field(default_factory=lambda: list(DEFAULT_PORTS))  # helper port candidates
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> "Config":
@@ -47,6 +53,9 @@ class Config:
 
         naming = data.get("naming", {})
         net = data.get("network", {})
+        server = data.get("server", {})
+        ports_raw = server.get("ports", DEFAULT_PORTS)
+        ports = [int(p) for p in ports_raw] if ports_raw else list(DEFAULT_PORTS)
         return cls(
             naming_template=naming.get("template", DEFAULT_TEMPLATE),
             date_format=naming.get("date_format", "%d %b %Y"),
@@ -60,4 +69,6 @@ class Config:
                 "url", cls.registry_update_url)),
             lpa_registry={k.lower(): v for k, v in data.get("lpa_registry", {}).items()},
             system_user_agents={k.lower(): v for k, v in data.get("user_agents", {}).items()},
+            allowed_origin=str(server.get("allowed_origin", DEFAULT_ALLOWED_ORIGIN)),
+            ports=ports,
         )

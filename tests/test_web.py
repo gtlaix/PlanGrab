@@ -12,10 +12,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from fastapi.testclient import TestClient
 
-from plangrab.web.app import app
+from plangrab.web.app import app, _config
 
 client = TestClient(app)
 checks = 0
+ALLOWED_ORIGIN = _config.allowed_origin
 
 
 def eq(got, want, label):
@@ -96,6 +97,42 @@ def test_api_resolve_blank_reference_is_400():
     ok("error" in r.json(), "resolve: blank-reference error returned")
 
 
+# --- Hosted-UI transport: liveness probe + cross-origin access -------------
+# The GitHub Pages downloader is a cross-origin caller of the local helper, so it
+# relies on /api/ping for discovery and on CORS + Private Network Access headers.
+
+def test_api_ping_shape():
+    data = client.get("/api/ping").json()
+    eq(data["app"], "plangrab", "ping: identifies the app")
+    ok(isinstance(data.get("version"), str) and data["version"], "ping: version is a non-empty string")
+
+
+def test_cors_allows_pages_origin():
+    r = client.get("/api/ping", headers={"Origin": ALLOWED_ORIGIN})
+    eq(r.headers.get("access-control-allow-origin"), ALLOWED_ORIGIN,
+       "cors: configured Pages origin is echoed back")
+
+
+def test_cors_preflight_grants_private_network():
+    r = client.options("/api/download", headers={
+        "Origin": ALLOWED_ORIGIN,
+        "Access-Control-Request-Method": "POST",
+        "Access-Control-Request-Headers": "content-type",
+        "Access-Control-Request-Private-Network": "true",
+    })
+    ok(r.status_code in (200, 204), "cors: preflight succeeds")
+    eq(r.headers.get("access-control-allow-origin"), ALLOWED_ORIGIN,
+       "cors: preflight echoes the allowed origin")
+    eq(r.headers.get("access-control-allow-private-network"), "true",
+       "pna: private-network access granted on preflight")
+
+
+def test_cors_blocks_unknown_origin():
+    r = client.get("/api/ping", headers={"Origin": "https://evil.example.com"})
+    ok(not r.headers.get("access-control-allow-origin"),
+       "cors: an untrusted origin is not granted access")
+
+
 if __name__ == "__main__":
     test_pages_render_with_injected_date()
     test_api_compat_shape()
@@ -104,4 +141,8 @@ if __name__ == "__main__":
     test_api_councils_shape()
     test_api_resolve_bad_council_is_400()
     test_api_resolve_blank_reference_is_400()
+    test_api_ping_shape()
+    test_cors_allows_pages_origin()
+    test_cors_preflight_grants_private_network()
+    test_cors_blocks_unknown_origin()
     print(f"OK — {checks} web checks passed.")

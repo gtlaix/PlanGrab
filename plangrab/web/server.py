@@ -1,11 +1,18 @@
 """Start the local PlanGrab web app and open a browser to it.
 
-Used by Run.ps1 (Windows) and run.sh (macOS). Binds 127.0.0.1 on a free port,
+Used by Run.ps1 (Windows) and run.sh (macOS). Binds 127.0.0.1 on a known port,
 so it never clashes with anything and is never reachable off the machine.
 Closing the console window stops the server.
+
+The port comes from a small fixed candidate list (config ``[server] ports``) so
+the hosted GitHub Pages UI can *find* this helper by probing the same list. Set
+``PLANGRAB_PORT`` to force a specific port. If every candidate is busy we fall
+back to a random free port (the helper's own local UI still opens fine; only the
+hosted page's auto-discovery relies on the known list).
 """
 from __future__ import annotations
 
+import os
 import socket
 import sys
 import threading
@@ -32,8 +39,30 @@ def _free_port() -> int:
         return s.getsockname()[1]
 
 
+def _is_free(port: int) -> bool:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+        try:
+            s.bind((HOST, port))
+            return True
+        except OSError:
+            return False
+
+
+def _pick_port(candidates: list[int]) -> int:
+    """First free port: PLANGRAB_PORT override, then the candidate list, then any
+    free port. The candidate list is what the hosted UI probes to find us."""
+    override = os.environ.get("PLANGRAB_PORT")
+    if override:
+        return int(override)
+    for port in candidates:
+        if _is_free(port):
+            return port
+    return _free_port()
+
+
 def main() -> None:
-    port = _free_port()
+    config = Config.load()
+    port = _pick_port(config.ports)
     url = f"http://{HOST}:{port}/"
 
     def open_browser() -> None:
@@ -42,7 +71,7 @@ def main() -> None:
 
     threading.Thread(target=open_browser, daemon=True).start()
     # Quietly pick up newly-added councils from the repo (best-effort, offline-safe).
-    start_background_refresh(Config.load())
+    start_background_refresh(config)
     print(f"PlanGrab running at {url}")
     print("Leave this window open. Close it to stop PlanGrab.")
     uvicorn.run(app, host=HOST, port=port, log_level="warning")

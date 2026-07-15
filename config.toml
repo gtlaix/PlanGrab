@@ -38,6 +38,18 @@ enabled = true
 [user_agents]
 # northgate = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) ... Chrome/124.0 Safari/537.36"
 
+# Local helper / hosted-UI settings. PlanGrab's UI can be served from GitHub
+# Pages while the actual downloading runs on this machine (so requests keep
+# coming from your own IP). The hosted page talks to this local helper over
+# http://127.0.0.1 on one of the ports below.
+[server]
+# Origin of the hosted UI that is allowed to drive this local helper (CORS).
+# Keep this tight — only the site you trust should be able to reach the helper.
+allowed_origin = "https://gtlaix.github.io"
+# Ports the helper tries in order (first free one wins); the hosted page probes
+# the same list to find the helper. Override the runtime port with PLANGRAB_PORT.
+ports = [8756, 8757, 8758, 8759, 8760]
+
 # Friendly council names by host. Optional — an unknown host on a known system
 # still works (it falls back to a humanised hostname). Add a line to label one.
 [lpa_registry]
