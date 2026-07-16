@@ -273,18 +273,22 @@ def download(req: DownloadRequest):
 
 @app.get("/api/pick-folder")
 def pick_folder():
-    """Open a native folder picker (tkinter), in an isolated subprocess.
+    """Open a native folder picker in an isolated subprocess.
 
-    Running Tk in its own process keeps it off the server's worker threads (Tk
-    must own the main thread, and macOS is strict about it). If tkinter is
-    missing or the dialog can't open, return an empty path + error so the UI can
-    fall back to the manual path field.
+    On Windows this uses a PowerShell ``FolderBrowserDialog`` — so the portable
+    bundle no longer has to ship the tcl/tk runtime (thousands of files that made
+    the zip large and slow to extract on locked-down PCs). On macOS/Linux (dev)
+    it falls back to tkinter. Running the dialog in its own process keeps GUI
+    toolkits off the server's worker threads. If the picker is missing or the
+    dialog can't open, return an empty path + error so the UI can fall back to
+    the manual path field.
     """
+    if sys.platform == "win32":
+        cmd = ["powershell", "-NoProfile", "-STA", "-Command", _PS_PICKER]
+    else:
+        cmd = [sys.executable, "-c", _TK_PICKER]
     try:
-        out = subprocess.run(
-            [sys.executable, "-c", _PICKER_SCRIPT],
-            capture_output=True, text=True, timeout=300,
-        )
+        out = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
         path = out.stdout.strip()
         if out.returncode != 0 and not path:
             return {"path": "", "error": out.stderr.strip() or "folder picker unavailable"}
@@ -293,7 +297,19 @@ def pick_folder():
         return {"path": "", "error": str(exc)}
 
 
-_PICKER_SCRIPT = (
+# Windows: a native folder dialog via .NET WinForms — no tkinter/tcl to ship. A
+# hidden TopMost owner form pulls the dialog in front of the browser.
+_PS_PICKER = (
+    "Add-Type -AssemblyName System.Windows.Forms;"
+    "$o = New-Object System.Windows.Forms.Form; $o.TopMost = $true;"
+    "$d = New-Object System.Windows.Forms.FolderBrowserDialog;"
+    "$d.Description = 'Choose download folder'; $d.ShowNewFolderButton = $true;"
+    "if ($d.ShowDialog($o) -eq [System.Windows.Forms.DialogResult]::OK)"
+    " { [Console]::Out.Write($d.SelectedPath) }; $o.Dispose()"
+)
+
+# macOS/Linux (dev): tkinter is present in a normal dev interpreter.
+_TK_PICKER = (
     "import tkinter as tk\n"
     "from tkinter import filedialog\n"
     "r = tk.Tk(); r.withdraw(); r.attributes('-topmost', True)\n"

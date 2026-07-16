@@ -2,9 +2,11 @@
 # Build the portable, unzip-and-run Windows folder — entirely from macOS/Linux.
 #
 # Produces dist/PlanGrab/ containing:
-#   python/   relocatable CPython for Windows x64 (includes tkinter — needed for
-#             the native folder picker; the Windows *embeddable* zip omits it)
-#   lib/      all dependencies as Windows wheels (pydantic-core, lxml, …)
+#   python/   relocatable CPython for Windows x64 (tcl/tk STRIPPED — the folder
+#             picker uses a native PowerShell dialog, so tcl/tk isn't needed;
+#             dropping it removes thousands of files that made the zip slow to
+#             extract on locked-down PCs)
+#   lib/      all dependencies as Windows wheels (pydantic-core, …)
 #   plangrab/ config.toml  Run.ps1  README.md
 # …and zips it to dist/PlanGrab-win64.zip for cloud-sync distribution.
 #
@@ -38,11 +40,20 @@ test -f "$DIST/python/python.exe" || { echo "ERROR: python.exe not found after e
 
 echo "==> Slim the runtime: drop debug symbols + dev-only stdlib (not used at runtime)"
 # ~58 MB of Windows .pdb debug symbols (libcrypto/python312/etc.) and dev-only
-# stdlib modules. tkinter + tcl are KEPT (the native folder picker needs them).
+# stdlib modules.
 find "$DIST/python" -name '*.pdb' -delete
 rm -rf "$DIST/python/Lib/ensurepip" "$DIST/python/Lib/idlelib" \
        "$DIST/python/Lib/lib2to3" "$DIST/python/Lib/turtledemo" \
        "$DIST/python/Lib/pydoc_data" "$DIST/python/include"
+
+echo "==> Drop tcl/tk (thousands of tiny files): the folder picker is now a"
+echo "    native PowerShell dialog, so tkinter/tcl are no longer needed."
+rm -rf "$DIST/python/tcl" "$DIST/python/Lib/tkinter"
+# The _tkinter extension + tcl/tk DLLs live in DLLs/ (sometimes the runtime root)
+# depending on the build; search the whole tree with DLL-specific patterns so we
+# catch them wherever they sit, without matching unrelated files.
+find "$DIST/python" \( -iname '_tkinter*' -o -iname 'tcl*.dll' -o -iname 'tk*.dll' \) \
+    -delete 2>/dev/null || true
 
 echo "==> Vendor dependencies as Windows wheels (-> $DIST/lib)"
 python3 -m pip install --target "$DIST/lib" \
@@ -62,8 +73,8 @@ cp data/lpa_systems.csv "$DIST/data/" 2>/dev/null || true       # map: colour by
 # Drop caches so the synced folder stays lean.
 find "$DIST" -name '__pycache__' -type d -prune -exec rm -rf {} +
 
-echo "==> Zip for distribution"
-( cd dist && zip -qr PlanGrab-win64.zip PlanGrab )
+echo "==> Zip for distribution (max compression -> smaller download)"
+( cd dist && zip -9 -qr PlanGrab-win64.zip PlanGrab )
 echo ""
 echo "Done -> dist/PlanGrab-win64.zip"
 echo "On the target PC: unzip, then either run the smoke test above or just run Run.ps1."

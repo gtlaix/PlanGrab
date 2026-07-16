@@ -14,6 +14,7 @@ warning — the web UI falls back to a typed path).
 from __future__ import annotations
 
 import importlib
+import shutil
 import sys
 from pathlib import Path
 
@@ -57,8 +58,14 @@ def run() -> int:
         _line(FAIL, "No TOML parser (need tomllib on 3.11+ or the tomli package)")
         critical_failed = True
 
-    # 4. Folder picker (non-critical)
-    if _importable("tkinter"):
+    # 4. Folder picker (non-critical). Windows uses a PowerShell dialog (so the
+    # bundle ships no tcl/tk); other platforms use tkinter.
+    if sys.platform == "win32":
+        if shutil.which("powershell"):
+            _line(OK, "PowerShell available (native folder picker will work)")
+        else:
+            _line(WARN, "PowerShell not found — folder 'Browse…' falls back to a typed path")
+    elif _importable("tkinter"):
         _line(OK, "tkinter available (native folder picker will work)")
     else:
         _line(WARN, "tkinter missing — folder 'Browse…' falls back to a typed path")
