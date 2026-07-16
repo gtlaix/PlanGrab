@@ -1,0 +1,67 @@
+# Build the portable Windows bundle and attach it to a GitHub Release.
+#
+# Why: the download button on the site points at
+# releases/latest/download/PlanGrab-win64.zip, so the released asset must be
+# built from current master — a stale release ships a helper that predates the
+# hosted-page integration and can't connect to it. GitHub's runners can reach the
+# CPython download that a sandboxed dev box can't, so the build runs here.
+#
+# Trigger: push a version tag (e.g. `git tag v0.2.0 && git push origin v0.2.0`),
+# or run it manually ("Run workflow") against an existing tag.
+name: Release Windows bundle
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to build and release (e.g. v0.2.0)"
+        required: true
+
+concurrency:
+  group: release-${{ github.event.inputs.tag || github.ref_name }}
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.event.inputs.tag || github.ref_name }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.tag || github.ref_name }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies (for the test gate)
+        run: pip install -r requirements.txt
+
+      - name: Run the offline test suite
+        run: python tests/run_all.py
+
+      - name: Build the portable Windows bundle
+        run: bash build_portable.sh          # -> dist/PlanGrab-win64.zip
+
+      - name: Report bundle size + file count
+        run: |
+          echo "zip:  $(du -h dist/PlanGrab-win64.zip | cut -f1)"
+          echo "files: $(find dist/PlanGrab -type f | wc -l)"
+
+      - name: Publish the bundle to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/PlanGrab-win64.zip --clobber
+          else
+            gh release create "$TAG" dist/PlanGrab-win64.zip \
+              --title "PlanGrab $TAG" \
+              --notes "Portable Windows bundle — unzip and run Run.ps1 (no install, no admin). Built automatically from \`$TAG\`."
+          fi
