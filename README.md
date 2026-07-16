@@ -393,13 +393,22 @@ hits a council site:
 ```
 
 It (1) downloads a relocatable **`python-build-standalone`** CPython for Windows
-x64 — the `install_only` build, which **includes `tkinter`** (the native folder
-picker needs it; the Windows *embeddable* package omits it); (2) **slims the
-runtime** — strips ~58 MB of `.pdb` debug symbols and dev-only stdlib (`ensurepip`,
-`idlelib`, `lib2to3`, `turtledemo`, `pydoc_data`, C `include/`); `tkinter`/`tcl` are
-kept; (3) vendors every dependency as a **Windows wheel** into `lib/` (correct
-`win_amd64` binaries even when built on macOS); and (4) copies the source, data,
-and the `Run*.ps1` launchers. **Result: ~19 MB zip** (down from ~48 MB).
+x64 (the `install_only` build); (2) **slims the runtime** — strips ~58 MB of
+`.pdb` debug symbols and dev-only stdlib (`ensurepip`, `idlelib`, `lib2to3`,
+`turtledemo`, `pydoc_data`, C `include/`), **and drops `tcl`/`tkinter`
+entirely** (see below); (3) vendors every dependency as a **Windows wheel** into
+`lib/` (correct `win_amd64` binaries even when built on macOS); and (4) copies
+the source, data, and the `Run*.ps1` launchers, then zips with `-9`.
+
+**Dropping tcl/tk is the big extraction-speed win.** tcl/tk is *thousands* of
+tiny files, and on a locked-down PC every extracted file is individually
+AV-scanned — so file count, not megabytes, is what made unzipping slow. It was
+carried solely for the native "Browse…" folder picker, so that picker now uses a
+**native PowerShell dialog** (`System.Windows.Forms.FolderBrowserDialog`, spawned
+by `web/app.py`'s `/api/pick-folder`) instead of `tkinter.filedialog`. No bundled
+runtime is needed for it — `Run.ps1` already launches via PowerShell — and if
+PowerShell is somehow unavailable the UI falls back to a typed path. (dev on
+macOS/Linux still uses the tkinter dialog.)
 
 HTML is parsed with BeautifulSoup's stdlib `html.parser` rather than `lxml`
 (verified to give identical results on IDOX pages) — one fewer compiled wheel, 8.5
@@ -415,9 +424,10 @@ the registry or system Python.
   tolerate and which is transparent to debug.
 - **PowerShell launcher**, not a `.bat` — PowerShell is confirmed runnable on the
   target and is more reliable here.
-- **`tkinter`-based folder picker** is run in an **isolated subprocess**, both
-  because Tk must own the main thread (macOS is strict) and so a missing-Tk
-  runtime degrades gracefully to a manual path field instead of crashing.
+- **Folder picker runs in an isolated subprocess** and degrades gracefully to a
+  manual path field if it can't open. On Windows it's a native **PowerShell**
+  dialog (no tcl/tk to ship — see above); on macOS/Linux dev it's `tkinter`,
+  which must own the main thread, hence the subprocess.
 - **Dependencies restricted to pure-Python or prebuilt Windows wheels** — no
   compiler is ever required. (`uvicorn`, not `uvicorn[standard]`, to avoid the
   `uvloop`/`httptools` C builds.)

@@ -133,6 +133,17 @@ def test_cors_blocks_unknown_origin():
        "cors: an untrusted origin is not granted access")
 
 
+def test_api_pick_folder_degrades_gracefully():
+    # No display / native dialog in the test env: the picker subprocess just fails.
+    # The endpoint must still return the contract (a string path — empty here so
+    # the UI falls back to a typed path), never 500. Windows uses PowerShell; this
+    # exercises the failure/fallback branch shared by both pickers.
+    r = client.get("/api/pick-folder")
+    eq(r.status_code, 200, "pick-folder: always 200 (never crashes the server)")
+    data = r.json()
+    ok(isinstance(data.get("path"), str), "pick-folder: returns a string path (typed-path fallback)")
+
+
 if __name__ == "__main__":
     test_pages_render_with_injected_date()
     test_api_compat_shape()
@@ -145,4 +156,5 @@ if __name__ == "__main__":
     test_cors_allows_pages_origin()
     test_cors_preflight_grants_private_network()
     test_cors_blocks_unknown_origin()
+    test_api_pick_folder_degrades_gracefully()
     print(f"OK — {checks} web checks passed.")
