@@ -49,11 +49,12 @@ plangrab/
     compat.py        # status taxonomy + compat_status.json read/write
     naming.py        # filename template + sanitisation + de-dup
     download.py      # session, retries, streaming, skip-existing, manifest
+    batch.py         # download many references for one council (one subfolder each)
     config.py        # loads config.toml
   web/
-    app.py           # FastAPI: /api/discover, /api/download, /api/compat, /api/smoke-test,
-                     #   /api/ping (+ CORS/Private-Network access for the hosted UI)
-    server.py        # binds a known port ([server] ports), opens the browser
+    app.py           # FastAPI: /api/discover, /api/download, /api/batch-download,
+                     #   /api/compat, /api/smoke-test, /api/ping (+ CORS for the hosted UI)
+    server.py        # binds a known port ([server] ports); quiet by default (open_browser)
     static/          # downloader UI + dashboard.html (drop a Claude Design build in here)
   cli.py             # full engine, no GUI — build/test this first
   selftest.py        # `python -m plangrab.selftest` — is the install healthy + online?
@@ -220,6 +221,38 @@ newly-harvested councils without re-downloading the bundle. Strictly
 best-effort — offline or blocked networks keep the shipped data; responses are
 validated so an error page can never clobber real files. Opt out or repoint via
 `[registry_update]` in `config.toml`.
+
+## Batch download (many applications at once)
+
+Pick a council, paste a list of application references (one per line), choose a
+folder, and PlanGrab downloads **every** application's documents in one run —
+each into its own subfolder — writing a combined `batch_manifest.csv` alongside
+each application's own `manifest.csv`. One bad reference never aborts the batch:
+it gets a `not_found`/`failed` status and the rest continue.
+
+The batch loop (`plangrab/engine/batch.py`, streamed to the UI via
+`POST /api/batch-download`) is a thin wrapper over the existing engine — it just
+drives `resolve_reference` → `discover` → `download_all` once per reference,
+reusing a single HTTP session for the whole batch. So it works for **every
+reference-capable system** (IDOX, Northgate/NEC, Civica), not one council.
+
+Resolution stays **pure httpx — no headless browser**. Each scraper's
+`resolve_reference` already runs the portal's simple search as a form POST,
+verifies the resolved page genuinely echoes the reference, and — crucially on
+multi-result pages — matches each result row's own `Ref. No` field rather than
+free text (so a COND whose *description* quotes its parent permission can't be
+mistaken for it), failing safe rather than guessing. This deliberately avoids a
+Playwright/Chromium dependency, which would add ~150 MB and break the
+no-install/no-admin portable bundle.
+
+## The quiet helper
+
+When served from GitHub Pages the downloader talks to a small local helper
+(`python -m plangrab.web.server`). By default that helper runs **quietly** and
+you drive it from the website, which finds it automatically — it no longer pops
+open its own browser tab. Set `[server] open_browser = true` (or
+`PLANGRAB_OPEN_BROWSER=1`) to also open the helper's own local UI, which remains
+reachable at `http://127.0.0.1:<port>/` as an offline fallback either way.
 
 ## Scaling across LPAs: registry, smoke test & dashboard
 

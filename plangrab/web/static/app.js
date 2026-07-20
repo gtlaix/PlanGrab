@@ -169,19 +169,19 @@ function setTag(index, status) {
   tag.textContent = status;
 }
 
-async function browse() {
-  setStatus($("folder-note"), "Opening folder picker…");
+async function browse(folderId = "folder", noteId = "folder-note") {
+  setStatus($(noteId), "Opening folder picker…");
   try {
     const resp = await api("/api/pick-folder");
     const data = await resp.json();
     if (data.path) {
-      $("folder").value = data.path;
-      setStatus($("folder-note"), "");
+      $(folderId).value = data.path;
+      setStatus($(noteId), "");
     } else {
-      setStatus($("folder-note"), data.error || "No folder chosen — you can paste a path instead.");
+      setStatus($(noteId), data.error || "No folder chosen — you can paste a path instead.");
     }
   } catch (e) {
-    setStatus($("folder-note"), "Picker unavailable — paste a path instead.", true);
+    setStatus($(noteId), "Picker unavailable — paste a path instead.", true);
   }
 }
 
@@ -259,6 +259,121 @@ function handleEvent(ev) {
   }
 }
 
+// --- Batch download (several applications for one council) -----------------
+function batchRow(reference) {
+  const li = document.createElement("li");
+  li.dataset.ref = reference;
+  li.innerHTML = `<span><div class="title"></div><div class="meta"></div></span>` +
+                 `<span class="tag queued">queued</span>`;
+  li.querySelector(".title").textContent = reference;
+  return li;
+}
+
+function setBatchRow(reference, status, meta) {
+  const li = document.querySelector(`#batch-list li[data-ref="${CSS.escape(reference)}"]`);
+  if (!li) return;
+  const tag = li.querySelector(".tag");
+  tag.className = `tag ${status}`;
+  tag.textContent = status.replace("_", " ");
+  if (meta != null) li.querySelector(".meta").textContent = meta;
+}
+
+let batchTotal = 0, batchDone = 0;
+
+function handleBatchEvent(ev) {
+  switch (ev.type) {
+    case "batch-start":
+      batchTotal = ev.total; batchDone = 0;
+      break;
+    case "item-start":
+      setBatchRow(ev.reference, "working", "resolving…");
+      break;
+    case "file":
+      if (ev.reference && ev.total) {
+        const li = document.querySelector(`#batch-list li[data-ref="${CSS.escape(ev.reference)}"]`);
+        if (li) li.querySelector(".meta").textContent = `${ev.index}/${ev.total} files`;
+      }
+      break;
+    case "item-done": {
+      // Map engine statuses to tag styles (ok->downloaded, no_documents->skipped).
+      const tag = ev.status === "ok" ? "downloaded"
+                : ev.status === "no_documents" ? "skipped" : ev.status;
+      const bits = [];
+      if (ev.downloaded) bits.push(`${ev.downloaded} downloaded`);
+      if (ev.skipped) bits.push(`${ev.skipped} skipped`);
+      if (ev.failed) bits.push(`${ev.failed} failed`);
+      if (ev.error) bits.push(ev.error);
+      setBatchRow(ev.reference, tag, bits.join(" · ") || ev.status.replace("_", " "));
+      batchDone += 1;
+      if (batchTotal) $("batch-progress-bar").style.width = `${Math.round((batchDone / batchTotal) * 100)}%`;
+      if (ev.status === "failed" || ev.status === "not_found" || ev.failed) {
+        $("batch-progress-bar").classList.add("has-failures");
+      }
+      break;
+    }
+    case "done": {
+      const s = ev.summary;
+      $("batch-progress-bar").style.width = "100%";
+      setStatus($("batch-status"),
+        `Done — ${s.ok}/${s.applications} applications, ${s.downloaded} files. ` +
+        `${s.not_found} not found, ${s.failed} failed. Saved to ${s.folder}`);
+      break;
+    }
+    case "error":
+      setStatus($("batch-status"), ev.message, true);
+      break;
+  }
+}
+
+async function batchDownload() {
+  const councilName = $("batch-council").value.trim();
+  const folder = $("batch-folder").value.trim();
+  const seen = new Set(), references = [];
+  for (const line of $("batch-refs").value.split("\n")) {
+    const r = line.trim();
+    if (r && !seen.has(r.toLowerCase())) { seen.add(r.toLowerCase()); references.push(r); }
+  }
+  const base = councilBaseUrl.get(councilName);
+  if (!base) { setStatus($("batch-status"), "Pick a council from the list first.", true); return; }
+  if (references.length === 0) { setStatus($("batch-status"), "Enter at least one application reference.", true); return; }
+  if (!folder) { setStatus($("batch-status"), "Choose a folder first.", true); return; }
+
+  $("batch-download").disabled = true;
+  const list = $("batch-list");
+  list.innerHTML = "";
+  for (const r of references) list.appendChild(batchRow(r));
+  $("batch-progress").classList.remove("hidden");
+  $("batch-progress-bar").style.width = "0%";
+  $("batch-progress-bar").classList.remove("has-failures");
+  setStatus($("batch-status"), `Downloading ${references.length} application${references.length === 1 ? "" : "s"}…`);
+
+  try {
+    const resp = await api("/api/batch-download", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ council: base, references, folder }),
+    });
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      let nl;
+      while ((nl = buffer.indexOf("\n")) >= 0) {
+        const line = buffer.slice(0, nl).trim();
+        buffer = buffer.slice(nl + 1);
+        if (line) handleBatchEvent(JSON.parse(line));
+      }
+    }
+  } catch (e) {
+    setStatus($("batch-status"), String(e), true);
+  } finally {
+    $("batch-download").disabled = false;
+  }
+}
+
 // --- Helper connection (hosted UI) -----------------------------------------
 // On the local helper's own UI the app is always available. On GitHub Pages we
 // gate the form behind a live connection to the helper and onboard first-timers.
@@ -313,8 +428,10 @@ $("url").addEventListener("keydown", (e) => { if (e.key === "Enter") discover();
 $("find-ref").addEventListener("click", findByReference);
 $("ref-number").addEventListener("keydown", (e) => { if (e.key === "Enter") findByReference(); });
 $("ref-council").addEventListener("keydown", (e) => { if (e.key === "Enter") $("ref-number").focus(); });
-$("browse").addEventListener("click", browse);
+$("browse").addEventListener("click", () => browse());
 $("download").addEventListener("click", download);
+$("batch-browse").addEventListener("click", () => browse("batch-folder", "batch-folder-note"));
+$("batch-download").addEventListener("click", batchDownload);
 const _retryBtn = $("helper-retry");
 if (_retryBtn) _retryBtn.addEventListener("click", checkConnection);
 

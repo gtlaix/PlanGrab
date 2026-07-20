@@ -49,6 +49,10 @@ allowed_origin = "https://gtlaix.github.io"
 # Ports the helper tries in order (first free one wins); the hosted page probes
 # the same list to find the helper. Override the runtime port with PLANGRAB_PORT.
 ports = [8756, 8757, 8758, 8759, 8760]
+# By default the helper runs quietly and you use the PlanGrab website, which
+# connects to it automatically. Set true (or PLANGRAB_OPEN_BROWSER=1) to also
+# open the helper's own local UI in a browser tab on start.
+open_browser = false
 
 # Friendly council names by host. Optional — an unknown host on a known system
 # still works (it falls back to a humanised hostname). Add a line to label one.

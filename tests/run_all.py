@@ -15,6 +15,7 @@ TESTS = [
     "test_civica_w2.py",
     "test_registry.py",
     "test_download.py",
+    "test_batch.py",
     "test_compat.py",
     "test_build_map.py",
     "test_registry_data.py",

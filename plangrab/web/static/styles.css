@@ -123,3 +123,21 @@ ol#doc-list li .meta { color: var(--muted); font-size: 12px; }
   padding: 10px 16px; border-radius: 8px; font-weight: 700; text-decoration: none;
 }
 .download-btn:hover { filter: brightness(1.08); }
+
+/* --- Batch download -------------------------------------------------------- */
+textarea#batch-refs {
+  width: 100%; min-height: 96px; margin-bottom: 4px; padding: 10px 12px;
+  border-radius: 8px; border: 1px solid var(--line);
+  background: #0d0f14; color: var(--text); font: inherit; font-size: 14px; resize: vertical;
+}
+textarea#batch-refs:focus { outline: 2px solid var(--accent); outline-offset: 0; border-color: transparent; }
+ol#batch-list { list-style: none; margin: 12px 0 0; padding: 0; max-height: 340px; overflow: auto; }
+ol#batch-list li {
+  display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;
+  padding: 8px 10px; border-bottom: 1px solid var(--line); font-size: 14px;
+}
+ol#batch-list li .title { font-variant-numeric: tabular-nums; }
+ol#batch-list li .meta { color: var(--muted); font-size: 12px; }
+.tag.queued { background: #2a2f3a; color: var(--muted); }
+.tag.working { background: rgba(79,140,255,0.16); color: var(--accent); }
+.tag.not_found { background: rgba(184,160,58,0.16); color: var(--skip); }

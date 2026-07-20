@@ -38,6 +38,7 @@ class Config:
     system_user_agents: dict[str, str] = field(default_factory=dict)  # system id -> UA override
     allowed_origin: str = DEFAULT_ALLOWED_ORIGIN  # hosted UI origin allowed to call the helper
     ports: list[int] = field(default_factory=lambda: list(DEFAULT_PORTS))  # helper port candidates
+    open_browser: bool = False          # open a local UI tab on start (off: run as a quiet helper)
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> "Config":
@@ -71,4 +72,5 @@ class Config:
             system_user_agents={k.lower(): v for k, v in data.get("user_agents", {}).items()},
             allowed_origin=str(server.get("allowed_origin", DEFAULT_ALLOWED_ORIGIN)),
             ports=ports,
+            open_browser=bool(server.get("open_browser", False)),
         )

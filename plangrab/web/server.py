@@ -65,15 +65,19 @@ def main() -> None:
     port = _pick_port(config.ports)
     url = f"http://{HOST}:{port}/"
 
-    def open_browser() -> None:
-        time.sleep(1.0)  # give uvicorn a moment to bind
-        webbrowser.open(url)
+    # By default PlanGrab runs as a quiet background helper for the PlanGrab
+    # website (which finds it automatically) — so we don't pop open our own UI.
+    # Opt in with [server] open_browser = true or PLANGRAB_OPEN_BROWSER=1.
+    if config.open_browser or os.environ.get("PLANGRAB_OPEN_BROWSER"):
+        def open_browser() -> None:
+            time.sleep(1.0)  # give uvicorn a moment to bind
+            webbrowser.open(url)
+        threading.Thread(target=open_browser, daemon=True).start()
 
-    threading.Thread(target=open_browser, daemon=True).start()
     # Quietly pick up newly-added councils from the repo (best-effort, offline-safe).
     start_background_refresh(config)
-    print(f"PlanGrab running at {url}")
-    print("Leave this window open. Close it to stop PlanGrab.")
+    print(f"PlanGrab helper running — open the PlanGrab website to use it ({url} also works).")
+    print("Keep this window open; close it to stop PlanGrab.")
     uvicorn.run(app, host=HOST, port=port, log_level="warning")
 
 

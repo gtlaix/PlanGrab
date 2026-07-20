@@ -222,6 +222,17 @@ def test_resolve_reference_verify_rejects_wrong_page():
         checks += 1
 
 
+def test_resolve_reference_blank_or_whitespace_raises():
+    # A blank/whitespace-only reference fails fast (before any network call).
+    for bad in ("", "   ", "\t\n"):
+        try:
+            IdoxScraper("Example", BASE).resolve_reference(FakeClient([]), bad)
+            raise AssertionError("expected ReferenceLookupError for blank reference")
+        except ReferenceLookupError:
+            global checks
+            checks += 1
+
+
 if __name__ == "__main__":
     test_5col()
     test_6col_measure_and_blank_description()
@@ -232,5 +243,6 @@ if __name__ == "__main__":
     test_resolve_reference_matches_the_cond_when_asked()
     test_resolve_reference_single_match_redirect()
     test_resolve_reference_no_match_raises()
+    test_resolve_reference_blank_or_whitespace_raises()
     test_resolve_reference_verify_rejects_wrong_page()
     print(f"OK — {checks} IDOX checks passed.")
