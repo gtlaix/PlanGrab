@@ -32,9 +32,10 @@ jobs:
     env:
       TAG: ${{ github.event.inputs.tag || github.ref_name }}
     steps:
+      # Default checkout = the triggering commit: the tag commit on a tag push,
+      # the dispatched ref (e.g. master) on a manual dispatch. The dispatch case
+      # then creates the tag itself in the publish step (--target below).
       - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.tag || github.ref_name }}
 
       - uses: actions/setup-python@v5
         with:
@@ -62,6 +63,7 @@ jobs:
             gh release upload "$TAG" dist/PlanGrab-win64.zip --clobber
           else
             gh release create "$TAG" dist/PlanGrab-win64.zip \
+              --target "$GITHUB_SHA" \
               --title "PlanGrab $TAG" \
               --notes "Portable Windows bundle — unzip and run Run.ps1 (no install, no admin). Built automatically from \`$TAG\`."
           fi
