@@ -97,6 +97,26 @@
       <div id="progress" class="progress hidden"><div id="progress-bar"></div></div>
       <p id="download-status" class="status"></p>
     </section>
+
+    <section class="card">
+      <label for="batch-council">Batch: download several applications at once</label>
+      <div class="row ref-row">
+        <input id="batch-council" list="council-list" placeholder="Council (type to search)…" autocomplete="off" spellcheck="false">
+      </div>
+      <textarea id="batch-refs" rows="4" placeholder="One application reference per line, e.g.&#10;23/02163/COND&#10;22/05126/LA&#10;89/00253/L"></textarea>
+      <div class="folder">
+        <label for="batch-folder">Save to folder</label>
+        <div class="row">
+          <input id="batch-folder" type="text" placeholder="Choose or paste a folder path… (one subfolder per application)">
+          <button id="batch-browse" class="secondary">Browse…</button>
+        </div>
+        <p id="batch-folder-note" class="status"></p>
+      </div>
+      <button id="batch-download">Download batch</button>
+      <div id="batch-progress" class="progress hidden"><div id="batch-progress-bar"></div></div>
+      <ol id="batch-list"></ol>
+      <p id="batch-status" class="status"></p>
+    </section>
     </div><!-- /#app-body -->
   </main>
 

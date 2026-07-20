@@ -39,6 +39,26 @@ POST /api/download   (streaming response, media type application/x-ndjson)
             …or, on a fatal pre-download error:
               {"type": "error", "message": str}
 
+POST /api/batch-download   (streaming response, media type application/x-ndjson)
+  request : {"council": "<portal-base-url>", "references": [str], "folder": str}
+  stream  : one JSON object per line, in order:
+              {"type": "batch-start", "total": int}
+              # then, per reference (in order):
+              {"type": "item-start", "index": int, "total": int, "reference": str}
+              {"type": "file", ...}                # per-file events, tagged with
+                                                   # "item_index" + "reference"
+              {"type": "item-done", "index": int, "reference": str,
+               "status": "ok"|"no_documents"|"not_found"|"failed",
+               "url": str|null, "folder": str|null, "downloaded": int,
+               "skipped": int, "failed": int, "error": str|null}
+              {"type": "done", "summary": {"applications": int, "ok": int,
+               "no_documents": int, "not_found": int, "failed": int,
+               "downloaded": int, "folder": str, "manifest": str}}
+            …or, on a fatal pre-flight error:
+              {"type": "error", "message": str}
+            Each application downloads into its own subfolder of "folder"; one bad
+            reference never aborts the batch (its item-done carries the failure).
+
 GET /api/pick-folder
   200     : {"path": "<absolute path>"}         # native dialog; "" if cancelled
   200     : {"path": "", "error": "<message>"}  # dialog unavailable -> UI uses manual field
@@ -75,7 +95,7 @@ from pydantic import BaseModel
 from plangrab import __version__
 from plangrab.engine import (
     Config, ReferenceLookupError, Registry, UnknownSystemError, download_all,
-    get_scraper, make_client, user_agent_for,
+    download_batch, get_scraper, make_client, user_agent_for,
 )
 from plangrab.engine.base import Scraper
 from plangrab.engine.registry import SYSTEMS
@@ -144,6 +164,12 @@ class DownloadRequest(BaseModel):
 class ResolveRequest(BaseModel):
     council: str      # the portal base URL (from /api/councils)
     reference: str
+
+
+class BatchDownloadRequest(BaseModel):
+    council: str            # the portal base URL (from /api/councils)
+    references: list[str]   # one application reference per entry
+    folder: str             # parent folder; each application gets a subfolder
 
 
 def _doc_json(d) -> dict:
@@ -259,6 +285,34 @@ def download(req: DownloadRequest):
             finally:
                 if client is not None:
                     client.close()
+                events.put(None)  # sentinel: stream complete
+
+        threading.Thread(target=work, daemon=True).start()
+        while True:
+            ev = events.get()
+            if ev is None:
+                break
+            yield json.dumps(ev) + "\n"
+
+    return StreamingResponse(gen(), media_type="application/x-ndjson")
+
+
+@app.post("/api/batch-download")
+def batch_download(req: BatchDownloadRequest):
+    """Download many references for one council; NDJSON stream (see contract)."""
+    def gen():
+        events: "queue.Queue" = queue.Queue()
+
+        def progress(ev: dict) -> None:
+            events.put(ev)
+
+        def work() -> None:
+            try:
+                download_batch(req.references, req.council, req.folder, _config,
+                               progress=progress)
+            except Exception as exc:  # pre-flight error (bad council/folder)
+                events.put({"type": "error", "message": str(exc)})
+            finally:
                 events.put(None)  # sentinel: stream complete
 
         threading.Thread(target=work, daemon=True).start()

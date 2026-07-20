@@ -5,6 +5,7 @@ error path of /api/discover). Run:  python tests/test_web.py
 Note: /api/pick-folder and the live /api/discover|/api/download paths are NOT
 tested here — they open a native dialog / hit council sites.
 """
+import json
 import sys
 from pathlib import Path
 
@@ -144,6 +145,38 @@ def test_api_pick_folder_degrades_gracefully():
     ok(isinstance(data.get("path"), str), "pick-folder: returns a string path (typed-path fallback)")
 
 
+def test_api_batch_download_streams():
+    # Fake the engine's batch driver so no council is touched; assert the endpoint
+    # streams the batch events through unchanged (batch-start … item-done … done).
+    import plangrab.web.app as appmod
+
+    def fake_batch(references, council, folder, config, *, client=None, progress=None):
+        progress({"type": "batch-start", "total": len(references)})
+        for i, ref in enumerate(references, start=1):
+            progress({"type": "item-done", "index": i, "reference": ref, "status": "ok",
+                      "url": "u", "folder": "f", "downloaded": 1, "skipped": 0,
+                      "failed": 0, "error": None})
+        progress({"type": "done", "summary": {"applications": len(references), "ok": len(references),
+                  "no_documents": 0, "not_found": 0, "failed": 0, "downloaded": len(references),
+                  "folder": folder, "manifest": "m"}})
+        return []
+
+    orig = appmod.download_batch
+    appmod.download_batch = fake_batch
+    try:
+        r = client.post("/api/batch-download", json={
+            "council": "https://x/online-applications/",
+            "references": ["23/0001/A", "23/0002/B"], "folder": "/tmp/out"})
+        eq(r.status_code, 200, "batch: 200")
+        events = [json.loads(line) for line in r.text.splitlines() if line.strip()]
+        types = [e["type"] for e in events]
+        eq(types[0], "batch-start", "batch: stream starts with batch-start")
+        eq(types[-1], "done", "batch: stream ends with done")
+        eq(sum(t == "item-done" for t in types), 2, "batch: one item-done per reference")
+    finally:
+        appmod.download_batch = orig
+
+
 if __name__ == "__main__":
     test_pages_render_with_injected_date()
     test_api_compat_shape()
@@ -157,4 +190,5 @@ if __name__ == "__main__":
     test_cors_preflight_grants_private_network()
     test_cors_blocks_unknown_origin()
     test_api_pick_folder_degrades_gracefully()
+    test_api_batch_download_streams()
     print(f"OK — {checks} web checks passed.")
